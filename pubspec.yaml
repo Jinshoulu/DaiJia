@@ -1,0 +1,159 @@
+name: demo
+description: A new Flutter application.
+
+# The following line prevents the package from being accidentally published to
+# pub.dev using `pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
+# echo "# DaiJia" >> README.md
+  #git init
+  #git add README.md
+  #git commit -m "first commit"
+  #git branch -M main
+  #git remote add origin https://github.com/Jinshoulu/DaiJia.git
+#git push -u origin main
+#
+
+#git remote add origin https://github.com/Jinshoulu/DaiJia.git
+#git branch -M main
+#git push -u origin main
+
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^0.1.3
+  # 基础控件
+  # 路由框架
+  fluro: 1.6.3
+  # 网络请求框架
+  dio: ^3.0.10
+  # 广播通知
+  event_bus: ^1.0.1
+  # app名称、版本号等信息
+  package_info: ^0.4.3
+  # 时间
+  common_utils: ^1.2.1
+  # 常用工具类 SpUtil ScreenUtil Dio imageUrl
+  flustars: ^0.3.3
+  rxdart: ^0.23.1
+  # 格式化
+  sprintf: ^4.1.0
+  # 图片加载
+  cached_network_image: ^2.2.0+1
+  # 状态管理
+  provider: ^4.3.2
+  # 本地路径
+  path_provider: ^1.6.11
+  # 权限申请
+  permission_handler: ^5.0.1+1
+  # 网络状态监听
+  connectivity: ^0.4.9
+  # 用于安卓更新
+  install_plugin: ^2.0.1
+  # 键盘事件的监听
+  keyboard_actions: ^3.3.0+1
+  # 启动
+  url_launcher: ^5.5.0
+  # 数据库
+  sqflite: ^1.3.1
+  # 下拉刷新
+  flutter_easyrefresh: 2.1.1
+  # 轮播图
+  flutter_swiper: ^1.1.6
+  # 获取相册
+  image_picker: ^0.6.7+4
+  # 图片压缩
+  flutter_native_image: ^0.0.5
+  # 侧滑删除 自定义启动广告图要用
+  flutter_slidable: ^0.5.4
+  # 加载网络地址
+  webview_flutter: ^0.3.22+1
+  #flutter 加载html代码
+  flutter_html: ^0.11.0
+  # toast 插件
+  oktoast: ^2.3.2
+  # 列表悬浮头 https://github.com/fluttercommunity/flutter_sticky_headers
+  sticky_headers: ^0.1.8+1
+  # 城市选择列表 https://github.com/flutterchina/azlistview
+  azlistview: ^0.1.2
+  # 息屏
+  wakelock: ^0.1.4+2
+  # 城市选择器 一级 或 多级联动
+  flutter_picker: ^1.1.5
+  # loading
+  flutter_easyloading: ^2.0.0
+  # 保存图片或者视频到本地
+  image_gallery_saver: ^1.6.4
+  # 主要是MD5  base64之类 转码
+  crypto: ^2.0.6
+  # 拼音
+  lpinyin: ^1.0.8
+  # 语言
+  flutter_localizations:
+    sdk: flutter
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter.
+flutter:
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - images/
+    - assets/
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/assets-and-images/#resolution-aware.
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/assets-and-images/#from-packages
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/custom-fonts/#from-packages
