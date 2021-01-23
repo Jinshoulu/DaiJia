@@ -8,6 +8,17 @@ class ExitApp {
   ExitApp();
 }
 
+///播放音频
+class PlayerAudio {
+  String audioName;
+  PlayerAudio(this.audioName);
+}
+
+///刷新列表页
+class ReloadListPage {
+  ReloadListPage();
+}
+
 
 class SourceEvent {
   int index;

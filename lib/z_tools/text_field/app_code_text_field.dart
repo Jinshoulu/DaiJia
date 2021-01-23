@@ -228,7 +228,7 @@ class _AppCodeTextFieldState extends State<AppCodeTextField> {
   leftImage(){
     return  widget.leftImage==null?SizedBox():Container(
       width: 30,
-      child: Center(child: LoadAssetImage(widget.leftImage,width: 20,height: 20,)),
+      child: Center(child: LoadAssetImage(widget.leftImage,width: 15,height: 15,)),
     );
   }
   //中间输入框

@@ -62,9 +62,9 @@ class OperateMode2Dialog extends StatelessWidget {
                           height: 36.0,
                           child: AppButton(
                               title: cancelText,
-                              textStyle: TextStyle(fontSize: 14,color: AppColors.whiteColor),
+                              textStyle: TextStyle(fontSize: 14,color: AppColors.black54Color),
                               radius: 36.0,
-                              bgColor: AppColors.red,
+                              bgColor: AppColors.bgColor,
                               image: null,
                               onPress: (){
                                 AppPush.goBack(context);

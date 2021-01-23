@@ -256,7 +256,7 @@ class _MoneyAndScorePageState extends State<MoneyAndScorePage> {
           );
         },
         requestData: {},
-        requestUrl: Api.yunShop,
+        requestUrl: Api.baseApi,
         requestBackData: (List list){
           setState(() {
             dataList = list;

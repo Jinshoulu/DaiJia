@@ -2,6 +2,7 @@
 import 'package:demo/public_header.dart';
 import 'package:flutter/material.dart';
 
+///虚线的绘制
 class MySeparator extends StatelessWidget {
   final double height;
   final Color color;

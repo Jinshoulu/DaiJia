@@ -92,8 +92,8 @@ class _AppAddImageWidgetState extends State<AppAddImageWidget> {
                     setState(() {});
                   },
                   child: Container(
-                    alignment: Alignment.topRight,
-                    child: Icon(Icons.cancel,size: 15,color: AppColors.red,),
+                    alignment: Alignment.bottomRight,
+                    child: LoadAssetImage('订单-删除',width: 15,height: 15,radius: 0.0,),
                   ),
                 )
             )

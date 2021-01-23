@@ -8,6 +8,7 @@ class TextContainer extends StatelessWidget {
   final Alignment alignment;
   final bool showBottomSlide;
   final Color slideColor;
+  final Color bgColor;
 
   const TextContainer({
     Key key,
@@ -16,7 +17,8 @@ class TextContainer extends StatelessWidget {
     @required this.style,
     this.alignment = Alignment.centerLeft,
     this.showBottomSlide = false,
-    this.slideColor
+    this.slideColor,
+    this.bgColor = Colors.white
   }) : super(key: key);
 
   @override
@@ -27,7 +29,8 @@ class TextContainer extends StatelessWidget {
             alignment: alignment,
             height: height,
             decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: slideColor,width: 1))
+              border: Border(bottom: BorderSide(color: slideColor,width: 1)),
+              color: bgColor,
             ),
             child: Text(
               title,

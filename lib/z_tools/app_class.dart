@@ -35,4 +35,21 @@ class AppClass {
     return result;
   }
 
+  //将秒转换成时分秒
+  static secondChangeTime(int second){
+
+    int hourTime = second~/3600;
+    int minTime = second~/60%60;
+    int secTime = second%60;
+    String hour = hourTime<10?'0$hourTime':hourTime.toString();
+    String min = minTime<10?'0$minTime':minTime.toString();
+    String sec = secTime<10?'0$secTime':secTime.toString();
+
+    if(hourTime==0){
+      return min+':'+sec;
+    }
+    return hour+':'+min+':'+sec;
+
+  }
+
 }

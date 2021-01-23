@@ -14,7 +14,9 @@ class TaskCenter extends StatefulWidget {
 
 class _TaskCenterState extends State<TaskCenter> {
 
-  int mSelected = 0;
+  bool isWeekTask = true;
+
+
 
   @override
   void initState() {
@@ -90,7 +92,7 @@ class _TaskCenterState extends State<TaskCenter> {
                     InkWell(
                       onTap: (){
                         setState(() {
-                          mSelected=0;
+                          isWeekTask = true;
                         });
                       },
                       child: Container(
@@ -99,15 +101,15 @@ class _TaskCenterState extends State<TaskCenter> {
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.only(topLeft: Radius.circular(40.0),bottomLeft:Radius.circular(40.0)),
                             border: Border.all(color: AppColors.mainColor,width: 1),
-                            color: mSelected==0?AppColors.mainColor:AppColors.whiteColor
+                            color: isWeekTask?AppColors.mainColor:AppColors.whiteColor
                         ),
-                        child: AppText(text: '本周任务',color: mSelected==0?AppColors.whiteColor:AppColors.mainColor,),
+                        child: AppText(text: '本周任务',color: isWeekTask?AppColors.whiteColor:AppColors.mainColor,),
                       ),
                     ),
                     InkWell(
                       onTap: (){
                         setState(() {
-                          mSelected=1;
+                          isWeekTask=false;
                         });
                       },
                       child: Container(
@@ -116,9 +118,9 @@ class _TaskCenterState extends State<TaskCenter> {
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.only(topRight: Radius.circular(40.0),bottomRight:Radius.circular(40.0)),
                             border: Border.all(color: AppColors.mainColor,width: 1),
-                            color: mSelected==1?AppColors.mainColor:AppColors.whiteColor
+                            color: !isWeekTask?AppColors.mainColor:AppColors.whiteColor
                         ),
-                        child: AppText(text: '本月任务',color: mSelected==1?AppColors.whiteColor:AppColors.mainColor,),
+                        child: AppText(text: '本月任务',color: !isWeekTask?AppColors.whiteColor:AppColors.mainColor,),
                       ),
                     )
                   ],
@@ -128,16 +130,17 @@ class _TaskCenterState extends State<TaskCenter> {
           ),
           SliverToBoxAdapter(
             child: Container(
+              padding: EdgeInsets.only(left: 16),
               height: 50.0,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Container(
-                    width: 20,
+                    width: 15,
                     alignment: Alignment.centerLeft,
                     child: LoadAssetImage('任务中心',radius: 0.0,height: 10,fit: BoxFit.fitHeight,),
                   ),
-                  TextContainer(title: '本周任务(未完成)', height: 30.0, style: TextStyles.mainAnd14)
+                  TextContainer(title: isWeekTask?'本周任务(未完成)':'本月任务(未完成)', height: 30.0, style: TextStyles.mainAnd14)
                 ],
               ),
             ),
@@ -151,30 +154,116 @@ class _TaskCenterState extends State<TaskCenter> {
               ),
               padding: EdgeInsets.only(top: 16,bottom: 16),
               child: Column(
-                children: <Widget>[
-                  createContainer(),
-                  createContainer(),
-                  createContainer(),
-                  createContainer(),
-                ],
+                children: createContainer()
               ),
             ),
           ),
           SliverToBoxAdapter(
             child: Container(
+              padding: EdgeInsets.only(left: 16),
               height: 50.0,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Container(
-                    width: 20,
+                    width: 15,
                     alignment: Alignment.centerLeft,
                     child: LoadAssetImage('任务中心',radius: 0.0,height: 10,fit: BoxFit.fitHeight,),
                   ),
-                  TextContainer(title: '上周任务完成情况(未完成)', height: 30.0, style: TextStyles.mainAnd14)
+                  TextContainer(title: isWeekTask?'上周任务完成情况(未完成)':'上月任务完成情况(未完成)', height: 30.0, style: TextStyles.mainAnd14)
                 ],
               ),
             ),
+          ),
+         SliverPadding(
+           padding: EdgeInsets.only(left: 16,right: 16),
+           sliver: SliverToBoxAdapter(
+             child: Container(
+               decoration: BoxDecoration(
+                 color: AppColors.whiteColor,
+                 borderRadius: BorderRadius.all(Radius.circular(8.0))
+               ),
+                child: GridView.builder(
+                  padding: EdgeInsets.all(0.0),
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: 4,
+                    //SliverGridDelegateWithFixedCrossAxisCount 构建一个横轴固定数量Widget
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      //横轴元素个数
+                        crossAxisCount: 2,
+                        //纵轴间距
+                        mainAxisSpacing: 0.0,
+                        //横轴间距
+                        crossAxisSpacing: 0.0,
+                        //子组件宽高长度比例
+                        childAspectRatio: 1.8
+                    ),
+                    itemBuilder: (BuildContext context, int index) {
+                      BoxDecoration box = BoxDecoration();
+                      switch(index){
+                        case 0:{
+                          box = BoxDecoration(
+                            color: AppColors.whiteColor,
+                              border: Border(
+                                right: BorderSide(color: AppColors.bgColor,width: 1),
+                              )
+                          );
+                        }break;
+                        case 1:{
+
+                        }break;
+                        default:{
+                          if(index==2){
+                            box = BoxDecoration(
+                                border: Border(
+                                  top: BorderSide(color: AppColors.bgColor,width: 1),
+                                  right: BorderSide(color: AppColors.bgColor,width: 1),
+                                )
+                            );
+                          }else if(index==3){
+                            box = BoxDecoration(
+                                border: Border(
+                                  top: BorderSide(color: AppColors.bgColor,width: 1),
+                                )
+                            );
+                          }else{
+                            if(index%2==0){
+                              box = BoxDecoration(
+                                  border: Border(
+                                    top: BorderSide(color: AppColors.bgColor,width: 1),
+                                    right: BorderSide(color: AppColors.bgColor,width: 1),
+                                  )
+                              );
+                            }else{
+                              box = BoxDecoration(
+                                  border: Border(
+                                    top: BorderSide(color: AppColors.bgColor,width: 1),
+                                  )
+                              );
+                            }
+
+                          }
+                        }break;
+                      }
+                      return Container(
+                        decoration: box,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            TextContainer(alignment: Alignment.center,title: '4/4', height: 30.0, style: TextStyle(fontSize: 17,color: AppColors.mainColor)),
+                            TextContainer(alignment: Alignment.center,title: '总订单任务', height: 20.0, style: TextStyle(fontSize: 14,color: AppColors.blackColor)),
+                          ],
+                        ),
+                      );
+
+                    }),
+             ),
+           ),
+         ),
+          SliverToBoxAdapter(
+            child: SizedBox(height: 50,),
           )
         ],
       ),
@@ -182,16 +271,27 @@ class _TaskCenterState extends State<TaskCenter> {
   }
 
   createContainer(){
-    return ContainerAddLineWidget(
-      edgeInsets: EdgeInsets.only(top: 5,bottom: 5),
-      height: 60.0,
-        child: Column(
-          children: <Widget>[
-            AppCell(title: '本周总订单任务', content: '未完成',height: 20.0,),
-            AppCell(height: 20.0,title: '推荐新客扫码开单或者扫码领红包',titleStyle: TextStyles.textDarkGray12, content: '2/2',contentStyle: TextStyles.textDarkGray12,),
-          ],
-        )
-    );
+    List<Widget> list = [];
+    for(int i = 0;i<4;i++){
+      Color lineColor;
+      if(i==3){
+        lineColor = AppColors.whiteColor;
+      }else{
+        lineColor = AppColors.bgColor;
+      }
+      list.add(ContainerAddLineWidget(
+          edgeInsets: EdgeInsets.only(top: 5,bottom: 5),
+          lineColor: lineColor,
+          height: 60.0,
+          child: Column(
+            children: <Widget>[
+              AppCell(title: '本周总订单任务', content: '未完成',height: 20.0,),
+              AppCell(height: 20.0,title: '推荐新客扫码开单或者扫码领红包',titleStyle: TextStyles.textDarkGray12, content: '2/2',contentStyle: TextStyles.textDarkGray12,),
+            ],
+          )
+      ));
+    }
+    return list;
   }
 }
 

@@ -1,7 +1,10 @@
 
+import 'package:demo/z_tools/app_bus_event.dart';
 import 'package:flutter/material.dart';
 
 import '../../public_header.dart';
+
+
 
 class AppRefreshWidget extends StatefulWidget {
 
@@ -40,6 +43,9 @@ class _AppRefreshWidgetState extends State<AppRefreshWidget> {
     super.initState();
     _controller = EasyRefreshController();
     _onRefresh();
+    eventBus.on<ReloadListPage>().listen((event) {
+      _onRefresh();
+    });
 
   }
 
@@ -50,7 +56,8 @@ class _AppRefreshWidgetState extends State<AppRefreshWidget> {
 
   getData(){
     var data = widget.requestData;
-    data['page'] = _page;
+    data['p'] = _page;
+    data['pageNum'] = 10;
     DioUtils.instance.post(widget.requestUrl, needList: true, data: data, onFailure: (code,msg){
       if(mounted){
         setState(() {

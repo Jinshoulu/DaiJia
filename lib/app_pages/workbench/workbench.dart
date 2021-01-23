@@ -1,4 +1,7 @@
 
+import 'package:demo/app_pages/be_user_common/AppPlayAudio.dart';
+import 'package:demo/app_pages/map/selectMap/AmapLocationAndSelectLocationPage.dart';
+import 'package:demo/app_pages/workbench/appointment/Appointment.dart';
 import 'package:demo/app_pages/workbench/driverCenter/DriverCenter.dart';
 import 'package:demo/app_pages/workbench/exchangeCenter/ExchangeCenter.dart';
 import 'package:demo/app_pages/workbench/taskCenter/TaskCenter.dart';
@@ -11,6 +14,7 @@ import 'package:demo/app_pages/workbench/tools/top_card_detail.dart';
 import 'package:demo/app_pages/workbench/tools/top_center_menu.dart';
 import 'package:demo/app_pages/workbench/tools/top_header.dart';
 import 'package:demo/provider/app_status.dart';
+import 'package:demo/z_tools/app_bus_event.dart';
 import 'package:demo/z_tools/app_widget/app_clip_widget.dart';
 import 'package:demo/z_tools/app_widget/app_stack_widget.dart';
 import 'package:demo/z_tools/router/routers.dart';
@@ -111,10 +115,12 @@ class _WorkbenchState extends State<Workbench> {
               SliverToBoxAdapter(
                 child: HomeAddress(
                     pushMap: (){
-
+                      AppPush.pushDefaultResult(context, AmapLocationAndSelectLocationPage(),(data){
+                        print(data);
+                      });
                     },
                     pushYuyue: (){
-
+                      AppPush.pushDefault(context, Appointment());
                     }
                 ),
               ),
@@ -237,6 +243,8 @@ class _WorkbenchState extends State<Workbench> {
 
   ///接单
   receivedOrder(){
+
+    eventBus.fire(PlayerAudio('message.mp3'));
 
   }
 

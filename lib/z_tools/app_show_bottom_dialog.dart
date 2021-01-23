@@ -1,7 +1,10 @@
 
+import 'package:demo/app_pages/order/dialog/OrderDetailDialog.dart';
+import 'package:demo/app_pages/order/dialog/QRImageDialog.dart';
 import 'package:demo/app_pages/workbench/tools/home_send_order_dialog.dart';
 import 'package:demo/app_pages/workbench/tools/share_menu_dialog.dart';
 import 'package:demo/app_pages/workbench/tools/show_reload_local_dialog.dart';
+import 'package:demo/z_tools/app_widget/AppBoldText.dart';
 import 'package:demo/z_tools/app_widget/text_container.dart';
 import 'package:demo/z_tools/dialog/empty_bottom_sheet.dart';
 import 'package:demo/z_tools/dialog/list_bottom_sheet.dart';
@@ -170,7 +173,7 @@ class AppShowBottomDialog {
 
   }
 
-  ///派单的弹窗
+  ///字符串列表弹窗
   static showBottomListSheet(BuildContext context, String title, List<String> list,Function onPress) {
 
     showModalBottomSheet(
@@ -189,7 +192,6 @@ class AppShowBottomDialog {
     );
 
   }
-
 
   ///刷新当前位置弹窗
   static showReloadLocal(BuildContext context, String address) {
@@ -229,7 +231,7 @@ class AppShowBottomDialog {
         });
   }
 
-  ///协议
+  ///中间协议
   static showDelegateDialog(BuildContext context, String title, String content, Function onPress) {
     showDialog(
         context: context,
@@ -253,22 +255,31 @@ class AppShowBottomDialog {
         });
   }
 
-  ///协议
-  static showDelegateSheetDialog(BuildContext context, String title, String content, Function onPress) {
+  ///底部协议
+  static showDelegateSheetDialog(BuildContext context, String title, String content,String sureText, Function onPress) {
     showModalBottomSheet(
         context: context,
         /// 使用true则高度不受16分之9的最高限制
         isScrollControlled: true,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20.0), topRight: Radius.circular(20.0)),
+        ),
         builder: (BuildContext context) {
           return EmptyBottomSheet(
               edgeInsets: EdgeInsets.only(bottom: 30.0),
-              topWidget: TextContainer(
-                  alignment: Alignment.center,
-                  showBottomSlide: true,
-                  slideColor: AppColors.black54Color,
-                  title: title,
-                  height: 60,
-                  style: TextStyle(fontSize: 18,color: AppColors.blackColor)),
+              topWidget: Container(
+                height: 60.0,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(15),topRight: Radius.circular(15)),
+                ),
+                child: Stack(
+                  children: <Widget>[
+                    Positioned.fill(child: AppBoldText(text: title,fonSize: 18,)),
+                    Positioned(left: 0,right: 0,bottom: 0,child: Container(color: AppColors.bgColor,height: 1,)),
+                  ],
+                ),
+              ),
               centerWidget: Container(
                 padding: EdgeInsets.all(16),
                 height: 300.0,
@@ -279,7 +290,7 @@ class AppShowBottomDialog {
                 width: double.infinity,
                 padding: EdgeInsets.only(left: 16,right: 16),
                 child: SizedBox(
-                  child: AppButton(radius: 45.0,title: '我知道了',bgColor: AppColors.mainColor, textStyle: TextStyles.whiteAnd14,onPress: () {
+                  child: AppButton(radius: 45.0,title: sureText.isEmpty?'我知道了':sureText,bgColor: AppColors.mainColor, textStyle: TextStyles.whiteAnd14,onPress: () {
                     Navigator.pop(context);
                     onPress();
                   }),
@@ -290,4 +301,76 @@ class AppShowBottomDialog {
     );
   }
 
+  ///中间是空的
+  static showEmptyCenterSheetDialog(BuildContext context, String title,Widget topRightWidget, Widget centerWidget, String sureText, Function onPress) {
+    showModalBottomSheet(
+        context: context,
+        /// 使用true则高度不受16分之9的最高限制
+        isScrollControlled: true,
+        builder: (BuildContext context) {
+          return EmptyBottomSheet(
+              edgeInsets: EdgeInsets.only(bottom: 30.0),
+              topWidget: Container(
+                height: 60.0,
+                child: Stack(
+                  children: <Widget>[
+                    Positioned.fill(child: TextContainer(
+                        alignment: Alignment.center,
+                        showBottomSlide: true,
+                        slideColor: AppColors.black54Color,
+                        title: title,
+                        height: 60,
+                        style: TextStyle(fontSize: 18,color: AppColors.blackColor))),
+                    Positioned(child: topRightWidget??SizedBox(),top: 0,right: 0,bottom: 0,)
+                  ],
+                )
+              ),
+              centerWidget: centerWidget??Container(),
+              downWidget: Container(
+                height: 75.0,
+                width: double.infinity,
+                alignment: Alignment.bottomCenter,
+                padding: EdgeInsets.only(left: 16,right: 16),
+                child: SizedBox(
+                  height: 45.0,
+                  child: AppButton(radius: 45.0,title: sureText.isEmpty?'确定':sureText,bgColor: AppColors.mainColor, textStyle: TextStyles.whiteAnd14,onPress: () {
+                    Navigator.pop(context);
+                    onPress();
+                  }),
+                ),
+              )
+          );
+        }
+    );
+  }
+
+  ///中间是空的
+  static showSheetQRImageDialog(BuildContext context, Function onPress) {
+    showModalBottomSheet(
+        context: context,
+        /// 使用true则高度不受16分之9的最高限制
+        isScrollControlled: true,
+        builder: (BuildContext context) {
+          return QRImageDialog(
+            onPress: (int index){
+              onPress(index);
+            },
+          );
+        }
+    );
+  }
+
+  ///查看订单详情
+  static showOrderDetailDialog(BuildContext context, var data) {
+    showModalBottomSheet(
+        context: context,
+        /// 使用true则高度不受16分之9的最高限制
+        isScrollControlled: true,
+        builder: (BuildContext context) {
+            return OrderDetailDialog(
+              data: data,
+            );
+        }
+    );
+  }
 }

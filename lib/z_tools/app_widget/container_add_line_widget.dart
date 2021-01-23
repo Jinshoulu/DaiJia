@@ -7,6 +7,7 @@ class ContainerAddLineWidget extends StatefulWidget {
 
   final double height;
   final Color bgColor;
+  final Color lineColor;
   final EdgeInsets edgeInsets;
   final double disW;
   final Widget child;
@@ -17,7 +18,8 @@ class ContainerAddLineWidget extends StatefulWidget {
     this.edgeInsets = const EdgeInsets.only(left: 16,right: 10),
     this.disW = 16.0,
     @required this.child,
-    this.bgColor = ColorsApp.whiteColor
+    this.bgColor = ColorsApp.whiteColor,
+    this.lineColor = AppColors.bgColor
   }) : super(key: key);
 
   @override
@@ -29,13 +31,15 @@ class _ContainerAddLineWidgetState extends State<ContainerAddLineWidget> {
   Widget build(BuildContext context) {
     return Container(
       color: widget.bgColor,
-      padding: widget.edgeInsets,
       height: widget.height,
       alignment: Alignment.centerLeft,
       child: Stack(
         children: <Widget>[
           Positioned.fill(
-            child: widget.child,
+            child: Padding(
+              padding: widget.edgeInsets,
+              child: widget.child,
+            ),
           ),
           Positioned(
               left: widget.disW,
@@ -44,7 +48,7 @@ class _ContainerAddLineWidgetState extends State<ContainerAddLineWidget> {
               child: SizedBox(
                 width: double.infinity,
                 height: 1,
-                child: const DecoratedBox(decoration: BoxDecoration(color: AppColors.bgColor)),
+                child:  DecoratedBox(decoration: BoxDecoration(color: widget.lineColor)),
               )
           )
         ],

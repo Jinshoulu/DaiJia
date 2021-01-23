@@ -19,22 +19,11 @@ class EmptyBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: SafeArea(
-        child: ClipRRect(
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20.0), topRight: Radius.circular(20.0)),
-          child: Container(
-            padding: edgeInsets,
-            decoration: BoxDecoration(
-              color: Colors.white,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[topWidget, centerWidget, downWidget],
-            ),
-          ),
-        ),
+    return Container(
+      padding: edgeInsets,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[topWidget, centerWidget, downWidget],
       ),
     );
   }

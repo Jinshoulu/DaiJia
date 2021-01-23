@@ -27,7 +27,7 @@ class ImageUtils {
 
 class Images {
 
-  static const Widget arrowRight = const LoadAssetImage('ic_arrow_right', height: 15.0, width: 15.0,color: AppColors.blackColor,);
+  static const Widget arrowRight = const LoadAssetImage('ic_arrow_right', height: 12.0, width: 12.0,color: AppColors.blackColor,);
 
-  static const Widget arrowRightWhite = const LoadAssetImage('ic_arrow_right', height: 15.0, width: 15.0, color: AppColors.whiteColor,);
+  static const Widget arrowRightWhite = const LoadAssetImage('ic_arrow_right', height: 12.0, width: 12.0, color: AppColors.whiteColor,);
 }

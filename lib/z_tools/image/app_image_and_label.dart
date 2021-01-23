@@ -27,8 +27,8 @@ class AppImageAndLabel extends StatelessWidget {
 
   const AppImageAndLabel({
     Key key,
-    this.image = '默认头像',
-    this.title = '这是标题',
+    @required this.image,
+    @required this.title,
     this.height = 50.0,
     this.showLine = true,
     this.bgColor = Colors.white,
@@ -58,9 +58,8 @@ class AppImageAndLabel extends StatelessWidget {
         height: height,
         alignment: isLeft?Alignment.centerLeft:Alignment.centerRight,
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: lineColor,width: 1)),
+          border: Border(bottom: BorderSide(color:showLine?lineColor:AppColors.transparentColor,width: 1)),
           color: bgColor,
-
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,

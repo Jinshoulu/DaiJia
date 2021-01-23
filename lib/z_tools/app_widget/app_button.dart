@@ -83,7 +83,9 @@ class _AppButtonState extends State<AppButton> {
       }break;
       case ButtonType.onlyImage:{
         return widget.image.contains('http')?LoadImage(widget.image,width: widget.imageSize,fit: BoxFit.fitWidth,radius: widget.radius,):
-        (widget.imageColor==null?LoadAssetImage(widget.image,width: widget.imageSize,fit: BoxFit.fitWidth,radius: widget.radius,):LoadAssetImage(widget.image,width: widget.imageSize,color: widget.imageColor,fit: BoxFit.fitWidth,radius: widget.radius,));
+        (widget.imageColor==null?
+        LoadAssetImage(widget.image,width: widget.imageSize,fit: BoxFit.fitWidth,radius: widget.radius,)
+            :LoadAssetImage(widget.image,width: widget.imageSize,color: widget.imageColor,fit: BoxFit.fitWidth,radius: widget.radius,));
       }break;
       case ButtonType.leftImage:{
         return Row(
@@ -126,7 +128,9 @@ class _AppButtonState extends State<AppButton> {
             Container(
               width: widget.imageSize,
               height: widget.imageSize,
-              child: widget.image.contains('http')?LoadImage(widget.image,radius: widget.radius,):LoadAssetImage(widget.image,radius: widget.radius,),
+              child: widget.image.contains('http')
+                  ?LoadImage(widget.image,radius: widget.radius,)
+                  :(widget.imageColor==null?LoadAssetImage(widget.image,radius: widget.radius,):LoadAssetImage(widget.image,color: widget.imageColor,radius: widget.radius,)),
             ),
             SizedBox(height: widget.disW,),
             Container(

@@ -35,12 +35,27 @@ class ShowEmptyBar extends StatelessWidget implements PreferredSizeWidget{
         color: backgroundColor,
         child: SafeArea(
           child: Container(
+            color: AppColors.whiteColor,
             padding: EdgeInsets.only(left: 10,right: 10),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
-                leftWidget??SizedBox(),
+                leftWidget??SizedBox(
+                  width: 48.0,
+                  child: IconButton(
+                    onPressed: () {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      AppPush.goBack(context);
+                    },
+                    tooltip: 'Back',
+                    padding: const EdgeInsets.all(12.0),
+                    icon: Image.asset(
+                      'assets/images/back_black.png',
+                      color: ThemeUtils.isDark(context) ? AppColors.whiteColor : AppColors.blackColor,
+                    ),
+                  ),
+                ),
                 Expanded(
                   child: centerWidget??TextContainer(
                       alignment: Alignment.center,
@@ -49,7 +64,7 @@ class ShowEmptyBar extends StatelessWidget implements PreferredSizeWidget{
                       style: style
                   ),
                 ),
-                rightWidget??SizedBox()
+                rightWidget??SizedBox(width: 48.0,),
               ],
             ),
           ),

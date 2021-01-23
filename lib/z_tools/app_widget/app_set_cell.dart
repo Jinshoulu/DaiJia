@@ -63,7 +63,7 @@ class AppSetCell extends StatelessWidget {
                       Gaps.hGap5,
                       showRightImage?Container(
                         child: Center(
-                          child: LoadAssetImage('ic_arrow_right', height: 15.0, width: 15.0,color: imageColor,),
+                          child: LoadAssetImage('ic_arrow_right', height: 12.0, width: 12.0,color: imageColor,),
                         ),
                       ):SizedBox()
                     ],

@@ -306,7 +306,7 @@ class _DriverAccountDetailState extends State<DriverAccountDetail> {
                   height: 40.0,
                   width: 120.0,
                   child: AppButton(title: '提现',radius: 40.0, bgColor: AppColors.mainColor,textStyle: TextStyles.whiteAnd14, onPress: (){
-                    AppShowBottomDialog.showDelegateSheetDialog(context, '提现说明', '这就是提现说明文档', (){
+                    AppShowBottomDialog.showDelegateSheetDialog(context, '提现说明', '这就是提现说明文档','', (){
                       AppPush.pushDefault(context, DriverWithdrawal());
                     });
                   }),

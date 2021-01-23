@@ -161,7 +161,7 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
                   children: <Widget>[
                     Expanded(
                         child: AppButton(radius: 8.0,bgColor: AppColors.lightOrangeColor,title: '代驾分基本规则',image: '代驾分记录规则',imageSize: 30.0,buttonType: ButtonType.leftImage, onPress: (){
-                          AppShowBottomDialog.showDelegateSheetDialog(context, '代驾分基本规则', '代驾分基本规则', (){
+                          AppShowBottomDialog.showDelegateSheetDialog(context, '代驾分基本规则', '代驾分基本规则','', (){
 
                           });
                         })
@@ -169,7 +169,7 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
                     SizedBox(width: 20,),
                     Expanded(
                         child: AppButton(radius: 8.0,bgColor: AppColors.lightBlueColor,title: '代驾分触发标准',image: '代驾分记录处罚标准',imageSize: 30.0,buttonType: ButtonType.leftImage, onPress: (){
-                          AppShowBottomDialog.showDelegateSheetDialog(context, '代驾分记录处罚标准', '代驾分记录处罚标准', (){
+                          AppShowBottomDialog.showDelegateSheetDialog(context, '代驾分记录处罚标准', '代驾分记录处罚标准','', (){
 
                           });
                         })

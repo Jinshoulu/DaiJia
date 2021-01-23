@@ -11,6 +11,7 @@ class AppCell extends StatelessWidget {
   final Alignment alignment;
   final TextStyle titleStyle;
   final TextStyle contentStyle;
+  final Widget leftWidget;
 
   const AppCell({
     Key key,
@@ -20,7 +21,8 @@ class AppCell extends StatelessWidget {
     this.edgeInsets = const EdgeInsets.only(left: 16,right: 16),
     this.alignment = Alignment.centerLeft,
     this.titleStyle = const TextStyle(fontSize: Dimens.font_sp14, color: AppColors.blackColor),
-    this.contentStyle = const TextStyle(fontSize: Dimens.font_sp13, color: AppColors.black54Color)
+    this.contentStyle = const TextStyle(fontSize: Dimens.font_sp13, color: AppColors.black54Color),
+    this.leftWidget
   }) : super(key: key);
 
 
@@ -34,6 +36,8 @@ class AppCell extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
+          leftWidget??SizedBox(),
+          SizedBox(width: leftWidget==null?0:5,),
           Text(title,style: titleStyle,),
           Gaps.hGap10,
           Expanded(

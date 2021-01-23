@@ -13,7 +13,7 @@ class HomeAddress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 70.0,
+      height: 80.0,
       padding: EdgeInsets.only(left: 16,right: 16),
       child: Container(
         padding: EdgeInsets.only(top: 5,bottom: 5,right: 10.0),
