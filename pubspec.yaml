@@ -129,6 +129,13 @@ dependencies:
   loading_indicator_view: ^1.0.0
   # 微信 分享、支付、登录
   fluwx: ^2.3.0
+  # 音频播放
+  audioplayers: ^0.15.1
+  #录音
+  flutter_sound: ^2.1.1
+  flutter_plugin_record: ^0.1.7
+  # 通讯录
+  easy_contact_picker: ^0.0.2
 
 
 dev_dependencies:
@@ -150,6 +157,7 @@ flutter:
   assets:
     - assets/images/
     - assets/data/
+    - assets/audio/
     - images/
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -15,4 +15,20 @@
     <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
         <item name="android:windowBackground">@android:color/white</item>
     </style>
+    <!-- 这里是使用动画的 -->
+    <style name="BaseAnimationTheme" parent="NormalTheme">
+        <!--activity的动画-->
+        <item name="android:windowAnimationStyle">@style/HoloThemeActivityAnimation</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <!--<item name="android:windowBackground">@android:color/transparent</item>-->
+
+    </style>
+    <!--Activity入场与退出动画-->
+    <style name="HoloThemeActivityAnimation" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_left</item>
+        <!--<item name="android:activityOpenExitAnimation">@anim/slide_right</item>-->
+        <!--<item name="android:activityCloseEnterAnimation">@anim/slide_left</item>-->
+        <item name="android:activityCloseExitAnimation">@anim/slide_right</item>
+    </style>
 </resources>
