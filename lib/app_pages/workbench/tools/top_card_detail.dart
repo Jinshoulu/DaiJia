@@ -1,9 +1,14 @@
 
+import 'package:demo/app_pages/workbench/beans/HomeInfoBean.dart';
 import 'package:demo/public_header.dart';
 import 'package:demo/z_tools/app_widget/text_container.dart';
 import 'package:flutter/material.dart';
 
 class TopCardDetail extends StatefulWidget {
+  final HomeInfoBean bean;
+
+  const TopCardDetail({Key key,@required this.bean}) : super(key: key);
+
   @override
   _TopCardDetailState createState() => _TopCardDetailState();
 }
@@ -23,15 +28,15 @@ class _TopCardDetailState extends State<TopCardDetail> {
             child: Column(
               children: <Widget>[
                 TextContainer(title: '今日收入(元)', height: 20, style: TextStyle(fontSize: 13,color: AppColors.whiteColor)),
-                TextContainer(title: '1162.00', height: 30.0, style: TextStyles.getWhiteBoldText(25)),
+                TextContainer(title: widget.bean?.tmoney??'', height: 30.0, style: TextStyles.getWhiteBoldText(25)),
                 SizedBox(height: 5,),
                 Expanded(child: Row(
                   children: <Widget>[
-                    createExpandWidget('52', '今日在线(分)'),
+                    createExpandWidget(widget.bean?.minutes.toString()??'', '今日在线(分)'),
                     SizedBox(width: 10,),
                     SizedBox(width: 1,height: double.infinity,child: const DecoratedBox(decoration: BoxDecoration(color: AppColors.black12Color)),),
                     SizedBox(width: 10,),
-                    createExpandWidget('23', '今日订单(单)'),
+                    createExpandWidget(widget.bean?.torder.toString()??'', '今日订单(单)'),
                   ],
                 )),
               ],

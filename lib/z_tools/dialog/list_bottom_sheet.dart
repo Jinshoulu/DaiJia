@@ -14,7 +14,7 @@ class ListBottomSheet extends StatelessWidget {
 
   final Function onTapDelete;
   final String title;
-  final List<String> tips;
+  final List tips;
 
   @override
   Widget build(BuildContext context) {
@@ -42,16 +42,24 @@ class ListBottomSheet extends StatelessWidget {
     list.add(Gaps.line);
 
     for(int i = 0; i<tips.length; i++){
+      var data = tips[i];
+      String title = '';
+      if(data is Map){
+        title = AppClass.data(tips[i], 'info');
+      }
+      if(data is String){
+        title = data;
+      }
       list.add(SizedBox(
         height: 50.0,
         width: double.infinity,
         child: FlatButton(
           textColor: AppColors.blackColor,
-          child: Text(tips[i], style: TextStyle(fontSize: Dimens.font_sp12)),
+          child: Text(title, style: TextStyle(fontSize: Dimens.font_sp12)),
           onPressed: () {
             print("列表点击索引："+ i.toString());
            Navigator.pop(context);
-            onTapDelete(i);
+            onTapDelete(data);
           },
         ),
       ));

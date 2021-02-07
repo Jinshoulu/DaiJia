@@ -14,13 +14,70 @@ class _MineChargeStandardState extends State<MineChargeStandard> {
 
   PageController _pageController;
   int isOne = 0;
+  var oneData;
+  var twoData;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _pageController = new PageController(initialPage: 0);
+    readData();
+    getData();
+    getData22();
+  }
 
+  //读取缓存
+  readData(){
+    AppClass.readData(Api.mineGetPriceUrl+'1').then((value){
+      if(value!=null){
+        setState(() {
+          oneData = value;
+        });
+      }
+    });
+    AppClass.readData(Api.mineGetPriceUrl+'2').then((value){
+      if(value!=null){
+        setState(() {
+          twoData = value;
+        });
+      }
+    });
+  }
+  getData(){
+    var data = {
+      'type':1,
+    };
+    DioUtils.instance.post(Api.mineGetPriceUrl,data: data, onFailure: (code,msg){
+
+    },onSucceed: (response){
+      if(response is Map){
+        AppClass.saveData(response, Api.mineGetPriceUrl+'1');
+        oneData = response;
+        if(mounted){
+          setState(() {
+
+          });
+        }
+      }
+    });
+  }
+
+  getData22(){
+    var data = {
+      'type':2,
+    };
+    DioUtils.instance.post(Api.mineGetPriceUrl,data: data, onFailure: (code,msg){
+
+    },onSucceed: (response){
+      if(response is Map){
+        AppClass.saveData(response, Api.mineGetPriceUrl+'2');
+        twoData = response;
+        if(mounted){
+          setState(() {});
+        }
+      }
+    });
   }
 
   @override
@@ -96,16 +153,18 @@ class _MineChargeStandardState extends State<MineChargeStandard> {
               itemBuilder: (BuildContext context,int index){
                 if(index==0){
                   return Container(
+                    padding: EdgeInsets.all(10.0),
                     color: Colors.white,
                     child: Html(
-                        data: '日常代驾的收费标准'
+                        data: AppClass.data(oneData, 'content')
                     ),
                   );
                 }else{
                   return Container(
+                    padding: EdgeInsets.all(10.0),
                     color: Colors.white,
                     child: Html(
-                        data: '长途商务的收费标准'
+                        data: AppClass.data(twoData, 'content')
                     ),
                   );
                 }

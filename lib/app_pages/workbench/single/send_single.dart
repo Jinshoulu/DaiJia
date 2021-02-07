@@ -2,11 +2,15 @@
 
 import 'package:demo/public_header.dart';
 import 'package:demo/z_tools/app_widget/app_label_cell.dart';
+import 'package:demo/z_tools/app_widget/app_stack_widget.dart';
 import 'package:demo/z_tools/app_widget/text_container.dart';
 import 'package:demo/z_tools/dialog/empty_bottom_sheet.dart';
 import 'package:demo/z_tools/dialog/list_bottom_sheet.dart';
 import 'package:demo/z_tools/dialog/operate_mode2_dialog.dart';
+import 'package:demo/z_tools/save_data.dart';
+import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_picker/flutter_picker.dart';
 
 class SendSingle extends StatefulWidget {
@@ -53,114 +57,125 @@ class _SendSingleState extends State<SendSingle> {
           }),
         ),
       ),
-      body: Container(
-        margin: EdgeInsets.only(top: 10),
-        child: ListView(
-          children: <Widget>[
-            Container(
-              height: 45.0,
-              child: Stack(
-                children: <Widget>[
-                  Positioned.fill(child: Row(
+      body: AppStackWidget(
+          topWidget: Container(
+            margin: EdgeInsets.only(top: 10),
+            child: ListView(
+              children: <Widget>[
+                Container(
+                  height: 45.0,
+                  child: Stack(
                     children: <Widget>[
-                      Container(
-                        width: 45.0,
-                        alignment: Alignment.center,
-                        child: LoadAssetImage(images[0],fit: BoxFit.fitWidth,width: imageSize,radius: 0.0,),
-                      ),
-                      Expanded(
-                          child: RichText(
-                              text: TextSpan(
-                                  children: [
-                                    TextSpan(
-                                        style: TextStyle(fontSize: Dimens.font_sp14,color: AppColors.blackColor),
-                                        text: phone??''
-                                    ),
-                                    TextSpan(
-                                        style: TextStyle(fontSize: Dimens.font_sp14,color: AppColors.black54Color),
-                                        text: '（默认注册人手机,可修改）'
-                                    ),
-                                  ]
+                      Positioned.fill(child: Row(
+                        children: <Widget>[
+                          Container(
+                            width: 45.0,
+                            alignment: Alignment.center,
+                            child: LoadAssetImage(images[0],fit: BoxFit.fitWidth,width: imageSize,radius: 0.0,),
+                          ),
+                          Expanded(
+                              child: RichText(
+                                  text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                            style: TextStyle(fontSize: Dimens.font_sp14,color: AppColors.blackColor),
+                                            text: phone??''
+                                        ),
+                                        TextSpan(
+                                            style: TextStyle(fontSize: Dimens.font_sp14,color: AppColors.black54Color),
+                                            text: '（默认注册人手机,可修改）'
+                                        ),
+                                      ]
+                                  )
                               )
                           )
-                      )
+                        ],
+                      )),
+                      Positioned(left: 16,right: 16,bottom: 0,child: SizedBox(
+                        width: double.infinity,
+                        height: 1,
+                        child: const DecoratedBox(decoration: BoxDecoration(color: AppColors.bgColor)),
+                      ))
                     ],
-                  )),
-                  Positioned(left: 16,right: 16,bottom: 0,child: SizedBox(
-                    width: double.infinity,
-                    height: 1,
-                    child: const DecoratedBox(decoration: BoxDecoration(color: AppColors.bgColor)),
-                  ))
-                ],
-              ),
-            ),
-            AppLabelCell(
-              edgeInsets: EdgeInsets.only(right: 10),
-              image: images[1],
-              imageSize: imageSize,
-              title: address??'',
-              showRightImage: true,
-              onPress: (){
-                 AppPush.pushResult(context, HomeRouter.selectMap, (result){
-                   Map data  = result;
-                   setState(() {
-                     address = '${data['title']??''}${data['address']??''}';
-                   });
-                   print('收到的 地址信息 result = $address');
-                 });
-              },
-            ),
-            AppLabelCell(
-              edgeInsets: EdgeInsets.only(right: 10),
-              image: images[2],
-              imageSize: imageSize,
-              title: time??'',
-              showRightImage: true,
-              onPress: (){
-                showPickerDate(context);
-              },
-            ),
-            AppLabelCell(
-              edgeInsets: EdgeInsets.only(right: 10),
-              image: images[3],
-              imageSize: imageSize,
-              title: driverNumber??'',
-              showRightImage: true,
-              onPress: (){
-                showModalBottomSheet(
-                  context: context,
-                  /// 使用true则高度不受16分之9的最高限制
-                  isScrollControlled: true,
-                  builder: (BuildContext context) {
-                    return EmptyBottomSheet(
-                      edgeInsets: EdgeInsets.only(left: 0,right: 0, bottom: 16),
-                       topWidget: TextContainer(
-                           showBottomSlide: true,
-                           slideColor: AppColors.black33Color,
-                           alignment: Alignment.center,
-                           title: '需要几位代驾',
-                           height: 60,
-                           style: TextStyle(
-                               fontSize: Dimens.font_sp18,
-                               fontWeight: FontWeight.bold,
-                               color: AppColors.blackColor
-                           )
-                       ),
-                      centerWidget: Container(
-                        height: 250,
-                        child: ListView(
-                          children: createListView(),
-                        ),
-                      ),
-                      downWidget: SizedBox(),
+                  ),
+                ),
+                AppLabelCell(
+                  edgeInsets: EdgeInsets.only(right: 10),
+                  image: images[1],
+                  imageSize: imageSize,
+                  title: address??'',
+                  showRightImage: true,
+                  onPress: (){
+                    AppPush.pushResult(context, HomeRouter.selectMap, (result){
+                      Map data  = result;
+                      setState(() {
+                        address = '${data['title']??''}${data['address']??''}';
+                      });
+                      print('收到的 地址信息 result = $address');
+                    });
+                  },
+                ),
+                AppLabelCell(
+                  edgeInsets: EdgeInsets.only(right: 10),
+                  image: images[2],
+                  imageSize: imageSize,
+                  title: time??'',
+                  showRightImage: true,
+                  onPress: (){
+                    showPickerDate(context);
+                  },
+                ),
+                AppLabelCell(
+                  edgeInsets: EdgeInsets.only(right: 10),
+                  image: images[3],
+                  imageSize: imageSize,
+                  title: driverNumber??'',
+                  showRightImage: true,
+                  onPress: (){
+                    showModalBottomSheet(
+                      context: context,
+                      /// 使用true则高度不受16分之9的最高限制
+                      isScrollControlled: true,
+                      builder: (BuildContext context) {
+                        return EmptyBottomSheet(
+                          edgeInsets: EdgeInsets.only(left: 0,right: 0, bottom: 16),
+                          topWidget: TextContainer(
+                              showBottomSlide: true,
+                              slideColor: AppColors.black33Color,
+                              alignment: Alignment.center,
+                              title: '需要几位代驾',
+                              height: 60,
+                              style: TextStyle(
+                                  fontSize: Dimens.font_sp18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.blackColor
+                              )
+                          ),
+                          centerWidget: Container(
+                            height: 250,
+                            child: ListView(
+                              children: createListView(),
+                            ),
+                          ),
+                          downWidget: SizedBox(),
+                        );
+                      },
                     );
                   },
-                );
-              },
-            )
+                )
 
-          ],
-        ),
+              ],
+            ),
+          ),
+          downWidget: Container(
+            height: 50.0,
+            child: AppButton(
+                title: '派单说明',
+                onPress: (){
+
+                }
+            ),
+          )
       ),
     );
   }
@@ -184,6 +199,41 @@ class _SendSingleState extends State<SendSingle> {
       ));
     }
     return list;
+  }
+
+  getPaidanShuoMing(){
+    String instruction = SpUtil.getString(SaveData.homePushOrderInstructionsUrl);
+
+    if(instruction.isNotEmpty){
+      showInstructionsDialog(SpUtil.getString(SaveData.homePushOrderInstructionsUrl));
+    }else{
+      DioUtils.instance.post(Api.homePushOrderInstructionsUrl,onSucceed: (response){
+        if(response is Map){
+          if(response['content'] != null){
+            SpUtil.putString(SaveData.homePushOrderInstructionsUrl,response['content'].toString());
+            showInstructionsDialog(response['content'].toString());
+          }else{
+            Toast.show('暂无说明');
+          }
+        }else{
+          Toast.show('暂无说明');
+        }
+      },onFailure: (code,msg){
+
+      });
+    }
+
+  }
+
+  ///派单说明
+  showInstructionsDialog(String html){
+    AppShowBottomDialog.showSendOrder(context, '派单必看', '知道了', Container(
+      padding: EdgeInsets.only(left: 10,right: 10),
+      height: 250.0,
+      child: Html(data: html??''),
+    ), (){
+      AppPush.push(context, HomeRouter.sendSingle);
+    });
   }
 
   showPickerDate(BuildContext context) {

@@ -2,17 +2,46 @@
 import 'dart:convert';
 
 import 'package:amap_location_fluttify/amap_location_fluttify.dart';
+import 'package:demo/provider/user_info.dart';
+import 'package:demo/z_tools/save_data.dart';
 import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lpinyin/lpinyin.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 import '../../public_header.dart';
 
 class AppLocal {
 
-  static Future getLocation () async {
+  static Future reloadLocation (BuildContext context)async{
+
+    Permission.location.request().then((value)async{
+      if(value.isGranted){
+        final result = await AmapLocation.instance.fetchLocation(mode: LocationAccuracy.High);
+        if(result.latLng.longitude==null){
+          Toast.show('定位尚未开启，只能展示默认位置');
+          return '';
+        }else{
+          Provider.of<UserInfo>(context,listen: false).user_local_late = result.latLng.latitude.toString();
+          Provider.of<UserInfo>(context,listen: false).user_local_long = result.latLng.longitude.toString();
+          Provider.of<UserInfo>(context,listen: false).user_local_province = result.province.toString();
+          Provider.of<UserInfo>(context,listen: false).user_local_city = result.city.toString();
+          Provider.of<UserInfo>(context,listen: false).user_local_area = result.district.toString();
+          Provider.of<UserInfo>(context,listen: false).user_local_address = result.address.toString();
+          Provider.of<UserInfo>(context,listen: false).user_aoi_name = result.aoiName==null?result.street.toString():result.aoiName.toString();
+          return '';
+        }
+
+      }else{
+        Toast.show('定位权限尚未开启，只能展示默认位置');
+        return '';
+      }
+    });
+  }
+  static Future getLocation (BuildContext context) async {
+
     Permission.location.request().then((value)async{
       if(value.isGranted){
         final result = await AmapLocation.instance.fetchLocation(
@@ -21,67 +50,126 @@ class AppLocal {
         debugPrint('获取当前的位置信息 = ${result}');
         if(result.latLng.longitude==null){
           Toast.show('定位尚未开启，只能展示默认位置');
-          if(SpUtil.getString(AppValue.user_select_city)==null){
-            return '400100';
-          }
-          return SpUtil.getString(AppValue.user_select_city_code);
+          return '';
         }else{
-          SpUtil.putString(AppValue.user_local_late, result.latLng.latitude.toString());
-          SpUtil.putString(AppValue.user_local_long, result.latLng.longitude.toString());
-          SpUtil.putString(AppValue.user_local_province, result.province.toString());
-          SpUtil.putString(AppValue.user_local_city, result.city.toString());
-          SpUtil.putString(AppValue.user_select_city, result.city.toString());
-          SpUtil.putString(AppValue.user_local_address, result.address.toString());
-          SpUtil.putString(AppValue.user_select_city_code, result.cityCode.toString());
-          SpUtil.putString(AppValue.user_aoi_name, result.aoiName.toString());
-          return result.cityCode;
+          Provider.of<UserInfo>(context,listen: false).user_local_late = result.latLng.latitude.toString();
+          Provider.of<UserInfo>(context,listen: false).user_local_long = result.latLng.longitude.toString();
+          Provider.of<UserInfo>(context,listen: false).user_local_province = result.province.toString();
+          Provider.of<UserInfo>(context,listen: false).user_local_city = result.city.toString();
+          Provider.of<UserInfo>(context,listen: false).user_local_area = result.district.toString();
+          Provider.of<UserInfo>(context,listen: false).user_local_address = result.address.toString();
+          Provider.of<UserInfo>(context,listen: false).user_aoi_name = result.aoiName==null?result.street.toString():result.aoiName.toString();
+
+          return getCityCode(result.province.toString(),result.city.toString(),result.district.toString(),context);
         }
 
       }else{
         Toast.show('定位权限尚未开启，只能展示默认位置');
-        SpUtil.putString(AppValue.user_local_late, '34.777334');
-        SpUtil.putString(AppValue.user_local_long, '113.707869');
-        SpUtil.putString(AppValue.user_local_province, '河南省');
-        SpUtil.putString(AppValue.user_local_city, '郑州');
-        SpUtil.putString(AppValue.user_select_city, '郑州');
-        SpUtil.putString(AppValue.user_local_address, '河南省郑州市金水区中州大道133金成时代广场');
-        SpUtil.putString(AppValue.user_select_city_code, '400100');
-        SpUtil.putString(AppValue.user_aoi_name, '金成时代广场');
         return '';
       }
     });
 
   }
 
-  static getCityCode(String cityName){
+  static getCityCode(String province,String cityName,String area,BuildContext context){
     if(cityName?.isEmpty??true){
-      return '400100';
+      return '';
+    }
+    if(SpUtil.getObject(SaveData.cityList)!=null){
+      var data = SpUtil.getObject(SaveData.cityList);
+      if(data is Map){
+        if(data['list']!=null){
+          debugPrint('保存的数据 -------> $data');
+          getAreaId(data['list'],province,cityName,area,context);
+        }else{
+          sendRequest(province, cityName, area,context);
+        }
+      }else{
+        sendRequest(province, cityName, area,context);
+      }
+    }else{
+      sendRequest(province, cityName, area,context);
     }
 
-    String pinyin = PinyinHelper.getPinyin(cityName,separator: "",format: PinyinFormat.WITHOUT_TONE);
-    String heightStr = pinyin.toUpperCase();
-    if(heightStr.length>1){
-      heightStr = heightStr.substring(0,1);
-    }
-    if(heightStr.isNotEmpty){
-      rootBundle.loadString('assets/data/city.json').then((value) {
-        Map dataMap = json.decode(value);
-        List subList = dataMap[heightStr];
-        subList.forEach((element) {
-          var data = element;
-          String pinyinStr = data['fullfight'];
-          if(pinyin==pinyinStr){
-            debugPrint(data.toString());
-            SpUtil.putString(AppValue.user_select_city, data['name'].toString());
-            SpUtil.putString(AppValue.user_local_city, data['name'].toString());
-            SpUtil.putString(AppValue.user_select_city_code, data['code'].toString());
-            return data['code'];
+  }
+
+  static sendRequest(String province,String cityName,String area,BuildContext context){
+    DioUtils.instance.post(Api.getCityListUrl,onFailure: (code,msg){
+
+    },onSucceed: (response){
+      if(response is List){
+        if(response.isNotEmpty){
+          SpUtil.putObject(SaveData.cityList, {'list':response});
+          getAreaId(response,province,cityName,area,context);
+        }
+      }
+    });
+  }
+
+  ///获取区 id
+  static getAreaId(data,String province,String cityName,String area,BuildContext context){
+
+    if(data != null && data is List){
+      ///读取数组
+      for(int i = 0;i<data.length; i++){
+        ///获取省级
+        var subDic = data[i];
+        String label = subDic['label'];
+        print('label = $label, province = $province');
+        ///寻找匹配项
+        if(label.contains(province)){
+          debugPrint('捕捉到 省级匹配项---->11111111');
+          String provinceId = subDic['value'].toString();
+          Provider.of<UserInfo>(context,listen: false).user_province_id = provinceId;
+          ///读取市级数组
+          List cityList = subDic['children'];
+          for(int i = 0;i<cityList.length; i++){
+            ///获取省级
+            var cityDic = cityList[i];
+            String label2 = cityDic['label'];
+            ///寻找匹配项
+            if(label2.contains(cityName)){
+              debugPrint('捕捉到 市级匹配项 ----> 222222');
+              String cityId = cityDic['value'].toString();
+              Provider.of<UserInfo>(context,listen: false).user_city_id = cityId;
+              ///读取县级数组
+              List areaList = cityDic['children'];
+              bool isHave = false;
+              for(int i = 0;i<areaList.length; i++){
+                ///获取省级
+                var areaDic = areaList[i];
+                String label3 = areaDic['label'];
+                ///寻找匹配项
+                if(label3.contains(area)){
+                  isHave = true;
+                  debugPrint('捕捉到 县级匹配项 ----> 3333333');
+                  String areaId = areaDic['value'].toString();
+                  Provider.of<UserInfo>(context,listen: false).user_area_id = areaId;
+                  return;
+                }
+              }
+              if(isHave==false){
+                if(areaList.length>0){
+                  debugPrint('未找到匹配项 获取数组第一条数据 ----> 6666666666');
+                  var areaDic = areaList.first;
+                  String areaId = areaDic['value'].toString();
+                  Provider.of<UserInfo>(context,listen: false).user_area_id = areaId;
+                  debugPrint('--------->$provinceId ---->$cityId --->$areaId');
+                  return;
+                }else{
+                  debugPrint('县级数组是空的 获取市级 id充当数据 ----> 6666666666');
+                  String areaId = cityDic['value'].toString();
+                  Provider.of<UserInfo>(context,listen: false).user_area_id = areaId;
+                  debugPrint('--------->$provinceId ---->$cityId --->$areaId');
+                  return;
+                }
+              }
+            }
           }
-        });
-      });
-    }else{
-      return '400100';
+        }
+      }
     }
+
   }
 
 }

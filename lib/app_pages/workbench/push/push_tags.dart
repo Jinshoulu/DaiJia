@@ -11,6 +11,36 @@ class PushTags extends StatefulWidget {
 }
 
 class _PushTagsState extends State<PushTags> {
+
+  var infoData;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    getData();
+
+  }
+
+  getData(){
+
+    DioUtils.instance.post(Api.homeGetOfficialInfoUrl,onSucceed: (response){
+
+      if(response is Map){
+        if(mounted){
+          setState(() {
+            infoData = response;
+          });
+        }
+      }
+
+    },onFailure: (code,msg){
+
+    });
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,7 +93,7 @@ class _PushTagsState extends State<PushTags> {
                                 height: 90.0,
                                 child: Row(
                                   children: <Widget>[
-                                    ImageHeader(height: 70,image: 'https'),
+                                    ImageHeader(height: 70,image: AppClass.data(infoData, 'headimg')),
                                     SizedBox(width: 10,),
                                     Expanded(child: Padding(
                                       padding: const EdgeInsets.only(top: 10,bottom: 10),
@@ -77,8 +107,8 @@ class _PushTagsState extends State<PushTags> {
                                               alignment: Alignment.centerLeft,
                                               child: RichText(
                                                   text: TextSpan(children: [
-                                                    TextSpan(text: '王师傅 ',style: TextStyle(fontSize: 17,color: AppColors.blackColor)),
-                                                    TextSpan(text: '(工号: 1513465464)',style: TextStyle(fontSize: 14,color: AppColors.black54Color)),
+                                                    TextSpan(text: AppClass.data(infoData, 'nickname'),style: TextStyle(fontSize: 17,color: AppColors.blackColor)),
+                                                    TextSpan(text: '(工号: ${AppClass.data(infoData, 'code')})',style: TextStyle(fontSize: 14,color: AppColors.black54Color)),
                                                   ])),
                                             ),
                                           ),
@@ -93,7 +123,7 @@ class _PushTagsState extends State<PushTags> {
                                                   child:LoadAssetImage('推广-驾驶',width: 18,fit: BoxFit.fitWidth,radius: 0.0),
                                                 ),
                                                 SizedBox(width: 5,),
-                                                Expanded(child: Text('11年驾龄',style: TextStyle(fontSize: 14,color: AppColors.blackColor),))
+                                                Expanded(child: Text('${AppClass.data(infoData, 'work_time')}年驾龄',style: TextStyle(fontSize: 14,color: AppColors.blackColor),))
                                               ],
                                             ),
                                           ))
@@ -110,7 +140,7 @@ class _PushTagsState extends State<PushTags> {
                               ),
                               Expanded(child: Container(
                                 padding: EdgeInsets.all(20.0),
-                                child: LoadAssetImage('defaultImage',radius: 0.0,),
+                                child: LoadImage(AppClass.data(infoData, 'code_url'),radius: 0.0,),
                               )),
                               TextContainer(alignment: Alignment.center,title: '扫码即可下单', height: 30.0, style: TextStyles.blackAnd14),
                               TextContainer(
@@ -124,14 +154,17 @@ class _PushTagsState extends State<PushTags> {
                           ),
                         ),
                       ),
-                      SizedBox(
-                        height: 60.0,
-                        child: AppButton(title: '保存到相册',textStyle: TextStyle(fontSize: 15,color: AppColors.orangeColor), onPress: (){
-                          AppShowBottomDialog.showFoundSaveDone(context, [''], () {
+                      SizedBox(height: 60.0,)
 
-                          });
-                        }),
-                      )
+
+//                      SizedBox(
+//                        height: 60.0,
+//                        child: AppButton(title: '保存到相册',textStyle: TextStyle(fontSize: 15,color: AppColors.orangeColor), onPress: (){
+//                          AppShowBottomDialog.showFoundSaveDone(context, [''], () {
+//
+//                          });
+//                        }),
+//                      )
                     ],
                   ),
                 ),

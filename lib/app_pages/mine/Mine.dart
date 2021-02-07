@@ -1,4 +1,5 @@
 
+import 'package:amap_map_fluttify/amap_map_fluttify.dart';
 import 'package:demo/app_pages/login/ModifyPassword.dart';
 import 'package:demo/app_pages/login/password_page.dart';
 import 'package:demo/app_pages/mine/MineAbout.dart';
@@ -11,6 +12,7 @@ import 'package:demo/app_pages/mine/MineFamilyNumber.dart';
 import 'package:demo/app_pages/mine/MineOrder.dart';
 import 'package:demo/app_pages/mine/MineSpotCheck.dart';
 import 'package:demo/app_pages/mine/MineWorkingPage.dart';
+import 'package:demo/app_pages/mine/bean/CustomerPhoneBean.dart';
 import 'package:demo/app_pages/mine/tools/MineHeader.dart';
 import 'package:demo/app_pages/mine/tools/MineService.dart';
 import 'package:demo/app_pages/workbench/driverCenter/DriverRecharge.dart';
@@ -19,7 +21,9 @@ import 'package:demo/z_tools/app_color.dart';
 import 'package:demo/z_tools/app_widget/app_button.dart';
 import 'package:demo/z_tools/app_widget/app_cell.dart';
 import 'package:demo/z_tools/dialog/customer_service_dialog.dart';
+import 'package:demo/z_tools/dialog/update_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info/package_info.dart';
 
 class Mine extends StatefulWidget {
   @override
@@ -27,6 +31,17 @@ class Mine extends StatefulWidget {
 }
 
 class _MineState extends State<Mine> {
+
+
+  CustomerPhoneBean phoneBean;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getReadData();
+    getCustomerPhone();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,7 +102,7 @@ class _MineState extends State<Mine> {
         AppPush.pushDefault(this.context, MineChargeStandard());
       }break;
       case '离线地图':{
-
+        AmapService.instance.openOfflineMapManager();
       }break;
       case '修改密码':{
           AppPush.pushDefault(this.context, ModifyPassword());
@@ -102,9 +117,14 @@ class _MineState extends State<Mine> {
         AppPush.pushDefault(this.context, MineAddOrder());
       }break;
       case '服务协议':{
-        AppShowBottomDialog.showDelegateSheetDialog(this.context, '司机服务协议', '这是司机服务协议', '我知道了', (){
+          AppClass.readData(Api.drivingDelegateUrl).then((value) {
+            if (value != null) {
+              AppShowBottomDialog.showDelegateSheetDialog(this.context, '司机服务协议',AppClass.data(value, 'content'), '我知道了', () {});
+            } else {
 
-        });
+              getDriverDelegate();
+            }
+          });
       }break;
       case '订单问题':{
         showCustomerServiceDialog();
@@ -115,8 +135,8 @@ class _MineState extends State<Mine> {
       case '其他问题':{
         showLocalSiguanServiceDialog();
       }break;
-      case '版本检测':{
-
+      case '版本检查':{
+        UpdateApp.determineAppVersion(this.context, false);
       }break;
       case '关于我们':{
         AppPush.pushDefault(this.context, MineAbout());
@@ -124,6 +144,49 @@ class _MineState extends State<Mine> {
       default:{}break;
     }
   }
+
+  //获取最新数据
+  getCustomerPhone(){
+
+    DioUtils.instance.post(Api.mineCustomerPhonesUrl,onSucceed: (response){
+      if(response is Map){
+        AppClass.saveData(response, Api.mineCustomerPhonesUrl);
+        phoneBean = CustomerPhoneBean.fromJson(response);
+      }
+    },onFailure: (code,msg){
+
+    });
+
+  }
+
+  //司机协议
+  getDriverDelegate(){
+
+    DioUtils.instance.post(Api.drivingDelegateUrl,onSucceed: (response){
+      if(response is Map){
+        AppClass.saveData(response, Api.drivingDelegateUrl);
+        AppShowBottomDialog.showDelegateSheetDialog(this.context, '司机服务协议',AppClass.data(response, 'content'), '我知道了', () {});
+      }else{
+        Toast.show('返回格式错误,请联系服务端');
+      }
+    },onFailure: (code,msg){
+
+    });
+
+  }
+
+  //获取保存数据
+  getReadData(){
+    AppClass.readData(Api.mineCustomerPhonesUrl).then((value){
+      if(value!=null){
+        setState(() {
+          phoneBean = CustomerPhoneBean.fromJson(value);
+        });
+      }
+    });
+  }
+
+
 
   showCustomerServiceDialog(){
     showDialog(
@@ -137,7 +200,7 @@ class _MineState extends State<Mine> {
               },
               content: '联系客服',
               title: '联系客服',
-              phones: ['0045-2452-421','0045-2452-421','0045-2452-421'],
+              phones: [phoneBean?.kefu_phone??''],
           );
         });
   }
@@ -154,7 +217,7 @@ class _MineState extends State<Mine> {
             },
             content: '本地司管',
             title: '联系本地司管',
-            phones: ['0045-2452-421','18244445555'],
+            phones: phoneBean?.siguan_phone??[],
           );
         });
   }

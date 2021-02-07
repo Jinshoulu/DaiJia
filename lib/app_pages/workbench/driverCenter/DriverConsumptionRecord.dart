@@ -14,7 +14,7 @@ class DriverConsumptionRecord extends StatefulWidget {
 class _DriverConsumptionRecordState extends State<DriverConsumptionRecord> {
 
   EasyRefreshController _controller;
-  List _list = ['','','','',];
+  List _list = [];
   /// 是否正在加载数据
   bool _isLoading = false;
   int _page = 1;

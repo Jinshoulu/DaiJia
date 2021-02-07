@@ -55,9 +55,9 @@ class OperateMode2Dialog extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 15.0, left: 15.0, right: 15.0 , top: 5.0),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      mainAxisAlignment: cancelText.isEmpty?MainAxisAlignment.center:MainAxisAlignment.spaceAround,
                       children: <Widget>[
-                        SizedBox(
+                        cancelText.isEmpty?SizedBox():SizedBox(
                           width: 110.0,
                           height: 36.0,
                           child: AppButton(

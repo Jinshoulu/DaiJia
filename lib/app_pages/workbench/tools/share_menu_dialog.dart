@@ -2,6 +2,7 @@
 
 import 'package:demo/app_pages/be_user_common/app_share.dart';
 import 'package:flutter/material.dart';
+import 'package:tencent_kit/tencent_kit.dart';
 import '../../../public_header.dart';
 
 class ShareMenuDialog extends StatefulWidget {
@@ -17,19 +18,46 @@ class _ShareMenuDialogState extends State<ShareMenuDialog> {
 
   var shareData;
 
+  static const String _TENCENT_APPID = '101934822';
+
+  final Tencent _tencent = Tencent()..registerApp(appId: _TENCENT_APPID);
+  StreamSubscription<TencentShareResp> _share;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _share = _tencent.shareResp().listen(_listenShare);
+    getData();
   }
 
-
+  void _listenShare(TencentShareResp resp) {
+    String content = 'share: ${resp.ret} - ${resp.msg}';
+    print('share qq reslult -------> $content');
+  }
 
   @override
   void dispose() {
-
+    _share?.cancel();
+    _share = null;
     super.dispose();
   }
+
+
+  getData(){
+    DioUtils.instance.post(Api.homeShareInfoUrl,onSucceed: (response){
+      if(response is Map){
+        if(mounted){
+          setState(() {
+            shareData = response;
+          });
+        }
+      }
+    },onFailure: (code,msg){
+
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +92,16 @@ class _ShareMenuDialogState extends State<ShareMenuDialog> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     createMenuItem(0, (){
-                      AppShare().getData('QQ', shareData, context);
+
+
+                      _tencent.shareWebpage(
+                        scene: TencentScene.SCENE_QQ,
+                        summary: AppClass.data(shareData, 'content'),
+//                        imageUri: Uri.dataFromBytes(bytes),
+//                        imageUri: Uri.https(AppClass.data(shareData, 'img_url'), 'http://www.baidu.com'),
+                        title: AppClass.data(shareData, 'title'),
+                        targetUrl: AppClass.data(shareData, 'jump_url'),
+                      );
                     }),
                     createMenuItem(1, (){
                       AppShare().getData('friend', shareData, context);

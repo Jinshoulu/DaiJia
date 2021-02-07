@@ -75,6 +75,7 @@ class _CustomerServiceDialogState extends State<CustomerServiceDialog> {
                       itemBuilder: (BuildContext context,int index){
                         return InkWell(
                           onTap: (){
+                            AppPush.goBack(context);
                             Utils.launchTelURL(widget.phones[index]);
                           },
                           child: Container(

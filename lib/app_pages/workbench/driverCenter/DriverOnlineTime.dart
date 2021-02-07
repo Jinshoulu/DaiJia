@@ -10,7 +10,7 @@ class DriverOnlineTime extends StatefulWidget {
 
   final int typeIndex;
 
-  const DriverOnlineTime({Key key, this.typeIndex}) : super(key: key);
+  const DriverOnlineTime({Key key, this.typeIndex=0}) : super(key: key);
 
   @override
   _DriverOnlineTimeState createState() => _DriverOnlineTimeState();
@@ -26,6 +26,10 @@ class _DriverOnlineTimeState extends State<DriverOnlineTime> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      _pageController?.jumpToPage(widget.typeIndex);
+    });
 
   }
 
@@ -47,11 +51,11 @@ class _DriverOnlineTimeState extends State<DriverOnlineTime> {
           isUp: true,
           height: 70.0,
           topWidget: Container(
-            height: 60.0,
+            height: 70.0,
             color: AppColors.whiteColor,
             margin: EdgeInsets.only(top: 10.0),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 createHeaderItem(0),
@@ -61,7 +65,7 @@ class _DriverOnlineTimeState extends State<DriverOnlineTime> {
             ),
           ),
           downWidget: Container(
-            child: PageView(
+            child: PageView.builder(
               controller: _pageController,
               physics: NeverScrollableScrollPhysics(),
               onPageChanged: (index){
@@ -71,11 +75,10 @@ class _DriverOnlineTimeState extends State<DriverOnlineTime> {
                   setState(() {});
                 }
               },
-              children: <Widget>[
-                new OnlineSubList(typeIndex: 0),
-                new OnlineSubList(typeIndex: 1),
-                new OnlineSubList(typeIndex: 2),
-              ],
+              itemBuilder: (BuildContext context,int index){
+                return OnlineSubList(typeIndex: index);
+              },
+
             ),
           )
       ),
@@ -130,20 +133,30 @@ class OnlineSubList extends StatefulWidget {
 
 class _OnlineSubListState extends State<OnlineSubList> {
   EasyRefreshController _controller;
-  List _list = ['','','','',];
+  List _list = [];
   /// 是否正在加载数据
   bool _isLoading = false;
   int _page = 1;
   int _maxPage = 1;
-  StateType _stateType = StateType.loading;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    readData();
     _controller = EasyRefreshController();
     _onRefresh();
+  }
 
+  //读取缓存
+  readData(){
+    AppClass.readData(Api.centerOnlineTimeUrl+widget.typeIndex.toString()).then((value){
+      if(value!=null){
+        setState(() {
+          _list = value;
+        });
+      }
+    });
   }
 
   Future _onRefresh() async {
@@ -152,32 +165,41 @@ class _OnlineSubListState extends State<OnlineSubList> {
   }
 
   getData(){
-    var data = {};
-    DioUtils.instance.post(Api.registerUrl, needList: true, data: data, onFailure: (code,msg){
+    var data = {
+      'p':_page,
+      'pageNum':15,
+      'type':widget.typeIndex==2?1:widget.typeIndex+2
+    };
+    DioUtils.instance.post(Api.centerOnlineTimeUrl,data: data, onFailure: (code,msg){
       if(mounted){
         setState(() {
           _isLoading = false;
-          _stateType = StateType.empty;
         });
       }
     },onSucceed: (response){
-      List list = response['data'];
-      _maxPage = response['countPage'];
-      showDataList(list);
+      if(response is Map){
+        List list = response['list'];
+        _maxPage = response['countPage'];
+        showDataList(list);
+      }else{
+        if(mounted){
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     });
   }
 
   showDataList(List dataList) {
     if (_page == 1) {
       _list.clear();
+      AppClass.saveData(dataList, Api.centerOnlineTimeUrl+widget.typeIndex.toString());
     }
     _list.addAll(dataList);
     if(mounted){
       setState(() {
         _isLoading = false;
-        if (_list.length == 0) {
-          _stateType = StateType.empty;
-        }
       });
     }
   }
@@ -222,20 +244,20 @@ class _OnlineSubListState extends State<OnlineSubList> {
           _loadMore();
         },
         child:_list.length == 0 ? Container(
-            height: MediaQuery.of(context).size.height-50,child: StateLayout(type: _isLoading?StateType.loading:_stateType))
+            height: MediaQuery.of(context).size.height-50,child: StateLayout(type: _isLoading?StateType.loading:StateType.empty))
             : CustomScrollView(
           slivers: <Widget>[
-            SliverToBoxAdapter(
-              child: Container(
-                padding: EdgeInsets.only(bottom: 10),
-                color: AppColors.whiteColor,
-                height: 40.0,
-                child: AppText(text: '合计: 04天22小时21分',color: AppColors.orangeColor,),
-              ),
-            ),
+//            SliverToBoxAdapter(
+//              child: Container(
+//                padding: EdgeInsets.only(bottom: 10),
+//                color: AppColors.whiteColor,
+//                height: 40.0,
+//                child: AppText(text: '合计: 04天22小时21分',color: AppColors.orangeColor,),
+//              ),
+//            ),
             SliverList(
                 delegate: SliverChildBuilderDelegate((BuildContext context,int index){
-                  return createItem({});
+                  return createItem(_list[index]);
                 },childCount: _list.length)
             )
           ],
@@ -250,20 +272,26 @@ class _OnlineSubListState extends State<OnlineSubList> {
     List<Widget> list = [];
     list.add(AppCell(
       height: 40,
-      title: '09-21',
+      title: '${AppClass.data(data, 'month')}-${AppClass.data(data, 'day')}',
       titleStyle: TextStyles.getBlackBoldText(15),
-      content: '合计在线: 20小时53分',
+      content: '合计在线: ${AppClass.data(data, 'times')}',
       contentStyle: TextStyle(color: AppColors.mainColor,fontSize: 14),
     ));
+    list.add(AppCell(
+      height: 25,
+      title: '${AppClass.data(data, 'start_time')}~${AppClass.data(data, 'end_time')}',
+      content: '在线: ${AppClass.data(data, 'times')}',
+      contentStyle: TextStyle(fontSize: 14,color: AppColors.blackColor),
+    ));
 
-    for(int i = 0; i<3; i++){
-      list.add(AppCell(
-        height: 25,
-      title: '08:08:00~11:00:00',
-      content: '在线: 2小时52分',
-        contentStyle: TextStyle(fontSize: 14,color: AppColors.blackColor),
-      ));
-    }
+//    for(int i = 0; i<3; i++){
+//      list.add(AppCell(
+//        height: 25,
+//      title: '08:08:00~11:00:00',
+//      content: '在线: 2小时52分',
+//        contentStyle: TextStyle(fontSize: 14,color: AppColors.blackColor),
+//      ));
+//    }
 
     return Container(
       color: AppColors.whiteColor,

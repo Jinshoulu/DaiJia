@@ -2,15 +2,16 @@
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
-import 'package:demo/app_pages/be_user_common/AppLocal.dart';
+import 'package:demo/app_pages/login/SignContainer.dart';
 import 'package:demo/app_pages/login/complete_info_page.dart';
 import 'package:demo/z_tools/app_widget/keyboard_action_widget.dart';
 import 'package:demo/z_tools/app_widget/text_container.dart';
 import 'package:demo/z_tools/dialog/empty_bottom_sheet.dart';
-import 'package:demo/z_tools/dialog/operate_empty_dialog.dart';
+import 'package:demo/z_tools/image/AppSubmitImage.dart';
 import 'package:demo/z_tools/net/UploadUtils.dart';
 import 'package:demo/z_tools/text_field/app_code_text_field.dart';
 import 'package:demo/z_tools/text_field/app_text_field.dart';
+import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:signature/signature.dart';
@@ -27,12 +28,17 @@ class _RegisterPageState extends State<RegisterPage> {
   TextEditingController _editingControllerPhone = new TextEditingController();
   TextEditingController _editingControllerPassword = new TextEditingController();
   TextEditingController _editingControllerCode = new TextEditingController();
+  TextEditingController _editingControllerPasswordConfirm = new TextEditingController();
 
   FocusNode _focusNodePhone = new FocusNode();
   FocusNode _focusNodePassword = new FocusNode();
   FocusNode _focusNodeCode = new FocusNode();
+  FocusNode _focusNodePasswordConfirm = new FocusNode();
 
   bool isAgree = false;
+  ///司机服务协议
+  String driverServiceDelegate = '';
+
   //签名图片
   String signImage;
   BuildContext _buildContext;
@@ -47,8 +53,21 @@ class _RegisterPageState extends State<RegisterPage> {
   void initState() {
     super.initState();
     _controller.addListener(() => print('Value changed'));
-    AppLocal.getLocation().then((value){
-      print(value);
+
+    getDriverServiceDelegate();
+  }
+
+
+  getDriverServiceDelegate(){
+
+    DioUtils.instance.post(Api.drivingDelegateUrl,onFailure: (code,msg){
+
+    },onSucceed: (response){
+        if(response is Map){
+          if(response['content']!=null){
+            driverServiceDelegate = response['content'];
+          }
+        }
     });
   }
 
@@ -64,7 +83,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     _buildContext = context;
     return KeyboardActionWidget(
-        list: [_focusNodePhone,_focusNodeCode,_focusNodePassword],
+        list: [_focusNodePhone,_focusNodeCode,_focusNodePassword,_focusNodePasswordConfirm],
         child: Scaffold(
           appBar: ShowWhiteAppBar(
             centerTitle: '注册',
@@ -93,6 +112,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       keyName: 'code',
                       edgeInsets: EdgeInsets.all(0.0),
                       mode: TextFieldMode.lineMode,
+                      type: '2',
                       bgColor: AppColors.transparentColor,
                       controller: _editingControllerCode,
                       controllerPhone: _editingControllerPhone,
@@ -106,7 +126,18 @@ class _RegisterPageState extends State<RegisterPage> {
                       mode: TexFieldMode.fourMode,
                       leftImage: '登录密码',
                       hintText: '请输入密码',
+                      showPass: true,
                       focusNode: _focusNodePassword
+                  ),
+                  AppTextField(
+                      edgeInsets: EdgeInsets.all(0.0),
+                      keyName: 'confirmPassword',
+                      controller: _editingControllerPasswordConfirm,
+                      mode: TexFieldMode.fourMode,
+                      leftImage: '登录密码',
+                      hintText: '请输入确认密码',
+                      showPass: true,
+                      focusNode: _focusNodePasswordConfirm
                   ),
                   SizedBox(height: 100.0,),
                   SizedBox(
@@ -116,7 +147,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         bgColor: AppColors.mainColor,
                         title: '确认',textStyle: TextStyles.whiteAnd14,
                         onPress: (){
-                          showSignWidget();
+                          requestRegister();
                         }
                     ),
                   ),
@@ -159,7 +190,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               )
                           ),
                           onTap: (){
-                            AppShowBottomDialog.showDelegateDialog(context, '司机服务协议', '这是关于司机服务的协议', (){
+                            AppShowBottomDialog.showDelegateDialog(context, '司机服务协议', driverServiceDelegate, (){
                               setState(() {
                                 isAgree = true;
                               });
@@ -178,114 +209,97 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  requestRegister(){
+
+    if(_editingControllerPhone.text.isEmpty){
+      Toast.show('请输入手机号');
+      return;
+    }
+    if(_editingControllerCode.text.isEmpty||_editingControllerCode.text.length!=6){
+      Toast.show('请输入正确的验证码');
+      return;
+    }
+    if(_editingControllerPassword.text.isEmpty){
+      Toast.show('请输入密码');
+      return;
+    }
+    if(_editingControllerPasswordConfirm.text.isEmpty){
+      Toast.show('请输入确认密码');
+      return;
+    }
+    if(_editingControllerPassword.text != _editingControllerPasswordConfirm.text){
+      Toast.show('两次密码不一致');
+      return;
+    }
+
+    var data = {
+      'phone': _editingControllerPhone.text,
+      'verify':_editingControllerCode.text,
+      'newpwd':_editingControllerPassword.text,
+      'repwd':_editingControllerPasswordConfirm.text,
+      'province_id':SpUtil.getString(AppValue.user_province_id,defValue: ''),
+      'city_id':SpUtil.getString(AppValue.user_city_id,defValue: ''),
+      'area_id':SpUtil.getString(AppValue.user_area_id,defValue: '')
+    };
+
+    DioUtils.instance.post(Api.registerUrl,context: this.context,data:data,onFailure: (code,msg){
+
+    },onSucceed: (response){
+      Toast.show('注册成功,请填写您的签名');
+      showSignWidget();
+    });
+
+  }
+
   showSignWidget(){
     showModalBottomSheet(
       context: this.context,
       /// 使用true则高度不受16分之9的最高限制
       isScrollControlled: true,
       builder: (BuildContext context) {
-        return EmptyBottomSheet(
-            topWidget: TextContainer(
-                showBottomSlide: true,
-                slideColor: AppColors.black33Color,
-                alignment: Alignment.center,
-                title: '协议签名确认',
-                height: 50,
-                style: TextStyle(
-                  fontSize: Dimens.font_sp18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.blackColor
-                )
-            ),
-            centerWidget: Container(
-              height: 200.0,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Signature(
-                    controller: _controller,
-                    height: 150.0,
-                    backgroundColor: AppColors.bgColor,
-                  ),
-                  Container(
-                    height: 50.0,
-                    alignment: Alignment.center,
-                    child: Text('您的签名会经过平台审核，如果不符合规格将不能正常接单',textAlign: TextAlign.center,style: TextStyles.blackAnd12,),
-                  )
-                ],
-              ),
-            ),
-            downWidget: Container(
-              height: 45,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Expanded(child: AppButton(radius: 45,title: '重签',bgColor: AppColors.redBtnColor, textStyle: TextStyles.whiteAnd14,onPress: () {
-                    setState(() {
-                      _controller.clear();
-                    });
-                  })),
-                  SizedBox(width: 20,),
-                  Expanded(child: AppButton(radius: 45,title: '确认',bgColor: AppColors.mainColor, textStyle: TextStyles.whiteAnd14,onPress: () async{
-                    Navigator.pop(context);
-                    if (_controller.isNotEmpty) {
-                      final Uint8List data = await _controller.toPngBytes();
-                      _saveToImage(data, 'signImage');
-                    }
-                  }))
-                ],
-              ),
-            )
+        return SignContainer(
+          onSuccess: (){
+            startLogin();
+          },
         );
       },
     );
   }
 
-  startRegister(){
+  startLogin(){
 
-    if(_editingControllerPhone.text.isEmpty){
-      Toast.show('手机号码不能为空');
-      return;
-    }
-    if(_editingControllerCode.text.isEmpty){
-      Toast.show('验证码不能为空');
-      return;
-    }
-    if(_editingControllerPassword.text.isEmpty){
-      Toast.show('密码不能为空');
-      return;
-    }
-    if(signImage.isEmpty){
-      Toast.show('请对司机服务协议进行签名');
-      return;
-    }
+    var data = {
+      'phone': _editingControllerPhone.text,
+      'password':_editingControllerPassword.text,
+      'province_id':SpUtil.getString(AppValue.user_province_id,defValue: ''),
+      'city_id':SpUtil.getString(AppValue.user_city_id,defValue: ''),
+      'area_id':SpUtil.getString(AppValue.user_area_id,defValue: ''),
+      'lon':SpUtil.getString(AppValue.user_local_long,defValue: ''),
+      'lat':SpUtil.getString(AppValue.user_local_late,defValue: ''),
+      'address':SpUtil.getString(AppValue.user_local_address,defValue: ''),
+      'device':SpUtil.getString(AppValue.user_only_one_id,defValue: ''),
+      'jg_device':SpUtil.getString(AppValue.user_j_push_id,defValue: ''),
+    };
 
+    DioUtils.instance.post(Api.loginUrl,context: this.context,data:data,onFailure: (code,msg){
 
-  }
-  //给image data 添加一个路径
-  void _saveToImage(Uint8List mUint8List,String name) async  {
-    name = md5.convert(utf8.encode(name)).toString();
-    Directory dir = await getTemporaryDirectory();
-    String path = dir.path +"/"+name+'.jpg';
-    var file = File(path);
-    File(path).writeAsBytesSync(mUint8List);
-//    bool exist =  await file.exists();
-//    if(!exist) {
-//      File(path).writeAsBytesSync(mUint8List);
-//    }
-    debugPrint("image save in path =${file.path}");
-    if (file != null && file.path != null) {
-      //todo 上传图片
-      String url = await UploadUtils.uploadImage2(file.path);
-      debugPrint('sign image url = $url');
-      if ((url ?? "").isNotEmpty) {
-        signImage = url;
-        startRegister();
+    },onSucceed: (response){
+      if(response is Map){
+        if(response['token']!=null){
+          SpUtil.putString(AppValue.login_account, _editingControllerPhone.text);
+          SpUtil.putString(AppValue.token, response['token'].toString());
+          SpUtil.putInt(AppValue.token_expiration, response['expiration']);
+          SpUtil.putString(AppValue.refresh_token, response['refertoken'].toString());
+          SpUtil.putBool(AppValue.login_state,true);
+          AppPush.push(this.context, Routes.home);
+        }else{
+          Toast.show('请求结果，格式不正确，请联系服务端人员');
+        }
       }else{
-        Toast.show('提交失败，请重新签名');
-        AppPush.pushDefault(_buildContext, CompleteInfoPage());
+        Toast.show('请求结果，格式不正确，请联系服务端人员');
       }
-    }
+    });
   }
+
+
 }

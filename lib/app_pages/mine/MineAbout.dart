@@ -7,9 +7,11 @@ import 'package:demo/z_tools/app_widget/app_set_cell.dart';
 import 'package:demo/z_tools/app_widget/app_size_box.dart';
 import 'package:demo/z_tools/app_widget/container_add_line_widget.dart';
 import 'package:demo/z_tools/app_widget/text_container.dart';
+import 'package:demo/z_tools/dialog/update_dialog.dart';
 import 'package:demo/z_tools/save_data.dart';
 import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info/package_info.dart';
 
 import '../../public_header.dart';
 
@@ -25,27 +27,51 @@ class _MineAboutState extends State<MineAbout> {
   AboutBean bean;
   bool update = true;
 
+  PackageInfo packageInfo;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
+    getInfo();
+    getReadData();
     update = SpUtil.getBool(SaveData.smartUpdate,defValue: true);
-
-
     getData();
   }
 
-  getData(){
-
-    DioUtils.instance.get(Api.aboutUsUrl, onFailure: (code,msg){},onSucceed: (response){
-
+  getInfo()async{
+    await PackageInfo.fromPlatform().then((value){
       setState(() {
-        bean = AboutBean.fromJson(response);
+        packageInfo = value;
       });
+    });
+  }
 
+  //获取保存数据
+  getReadData(){
+
+    AppClass.readData(Api.aboutUsUrl).then((value){
+      if(value!=null){
+        setState(() {
+          bean = AboutBean.fromJson(value);
+        });
+      }
     });
 
+  }
+
+  //获取信息
+  getData(){
+    DioUtils.instance.post(Api.aboutUsUrl, onFailure: (code,msg){},onSucceed: (response){
+      if(response is Map){
+        if(mounted){
+          setState(() {
+            AppClass.saveData(response, Api.aboutUsUrl);
+            bean = AboutBean.fromJson(response);
+          });
+        }
+      }
+    });
   }
 
 
@@ -72,8 +98,8 @@ class _MineAboutState extends State<MineAbout> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  LoadAssetImage('defaultImage',width: 80.0,height: 80.0,radius: 0.0,),
-                  TextContainer(alignment: Alignment.center,title: '标兵代驾', height: 40.0, style: TextStyles.blackAnd14)
+                  LoadImage(bean?.logo_url??'',holderImg: 'ic_launcher',width: 80.0,height: 80.0,radius: 0.0,),
+                  TextContainer(alignment: Alignment.center,title: packageInfo?.appName??'', height: 40.0, style: TextStyles.blackAnd14)
                 ],
               ),
             ),
@@ -89,7 +115,7 @@ class _MineAboutState extends State<MineAbout> {
                     disW: 10.0,
                       child: AppCell(
                         edgeInsets: EdgeInsets.only(left: 0,right: 0),
-                        title: '现在版本号', content: '1.0.0',contentStyle: TextStyle(fontSize: 14,color: AppColors.mainColor),),
+                        title: '现在版本号', content: packageInfo?.version??'',contentStyle: TextStyle(fontSize: 14,color: AppColors.mainColor),),
                   ),
                   ContainerAddLineWidget(
                     disW: 10.0,
@@ -98,7 +124,7 @@ class _MineAboutState extends State<MineAbout> {
                       title: '检查版本号',
                       showLine: false,
                       onPress: (){
-
+                        UpdateApp.determineAppVersion(this.context, false);
                       },
                     ),
                   ),
@@ -139,7 +165,13 @@ class _MineAboutState extends State<MineAbout> {
                         title: '《客服服务协议》',
                         textStyle: TextStyle(fontSize: 14,color: AppColors.blueColor),
                         onPress: (){
-                          getMinaze();
+                          AppClass.readData(Api.userServiceDelegateUrl).then((value) {
+                            if (value != null) {
+                              AppPush.goHtmlPage(this.context, '客服服务协议', AppClass.data(value, 'content'));
+                            } else {
+                              getUserDelegate();
+                            }
+                          });
                         }
                     ),
                   ),
@@ -150,7 +182,13 @@ class _MineAboutState extends State<MineAbout> {
                         title: '《隐私保护协议》',
                         textStyle: TextStyle(fontSize: 14,color: AppColors.blueColor),
                         onPress: (){
-                          getYinsi();
+                          AppClass.readData(Api.privacyUrl).then((value) {
+                            if (value != null) {
+                              AppPush.goHtmlPage(this.context, '隐私保护协议', AppClass.data(value, 'content'));
+                            } else {
+                              getPolicyDelegate();
+                            }
+                          });
                         }
                     ),
                   )
@@ -164,62 +202,62 @@ class _MineAboutState extends State<MineAbout> {
     );
   }
 
-  getMinaze(){
+  //用户协议
+  getUserDelegate(){
 
-//    if(SpUtil.getString(SaveData.liabilityHtml).isEmpty){
-//      AppPush.goHtmlPage(context, '免责声明', SpUtil.getString(SaveData.liabilityHtml));
-//    }
+    DioUtils.instance.post(Api.userServiceDelegateUrl,onSucceed: (response){
+      if(response is Map){
+        AppClass.saveData(response, Api.userServiceDelegateUrl);
+        AppPush.goHtmlPage(this.context, '客服服务协议', AppClass.data(response, 'content'));
+      }else{
+        Toast.show('返回格式错误,请联系服务端');
+      }
+    },onFailure: (code,msg){
 
-//    DioUtils.instance.post(Api.getLiabilityUrl,context: this.context,onFailure: (code,msg){
-//
-//    },onSucceed: (response){
-//
-//      SpUtil.putString(SaveData.privacyHtml, response);
-//      AppPush.goHtmlPage(this.context, '免责声明', response);
-//
-//    });
+    });
+
   }
 
-  getYinsi(){
+  //隐私协议
+  getPolicyDelegate(){
 
-//    if(SpUtil.getString(SaveData.privacyHtml).isEmpty){
-//      AppPush.goHtmlPage(context, '隐私协议', SpUtil.getString(SaveData.privacyHtml));
-//    }
+    DioUtils.instance.post(Api.privacyUrl,onSucceed: (response){
+      if(response is Map){
+        AppClass.saveData(response, Api.privacyUrl);
+        AppPush.goHtmlPage(this.context, '隐私保护协议', AppClass.data(response, 'content'));
+      }else{
+        Toast.show('返回格式错误,请联系服务端');
+      }
+    },onFailure: (code,msg){
 
-//    DioUtils.instance.post(Api.getPrivacyUrl,context: this.context,onFailure: (code,msg){
-//
-//    },onSucceed: (response){
-//
-//      SpUtil.putString(SaveData.privacyHtml, response);
-//      AppPush.goHtmlPage(this.context, '隐私协议', response);
-//
-//    });
+    });
+
   }
 
 }
 
 class AboutBean {
-    String com_name;
-    String contactus;
-    String url;
+    String company;
+    String logo_url;
+    String tel;
     String wechat;
 
-    AboutBean({this.com_name, this.contactus, this.url, this.wechat});
+    AboutBean({this.company, this.logo_url, this.tel, this.wechat});
 
     factory AboutBean.fromJson(Map<String, dynamic> json) {
         return AboutBean(
-            com_name: json['com_name'].toString(),
-            contactus: json['contactus'].toString(),
-            url: json['url'].toString(),
-            wechat: json['wechat'].toString(),
+            company: json['company'], 
+            logo_url: json['logo_url'], 
+            tel: json['tel'], 
+            wechat: json['wechat'], 
         );
     }
 
     Map<String, dynamic> toJson() {
         final Map<String, dynamic> data = new Map<String, dynamic>();
-        data['com_name'] = this.com_name;
-        data['contactus'] = this.contactus;
-        data['url'] = this.url;
+        data['company'] = this.company;
+        data['logo_url'] = this.logo_url;
+        data['tel'] = this.tel;
         data['wechat'] = this.wechat;
         return data;
     }

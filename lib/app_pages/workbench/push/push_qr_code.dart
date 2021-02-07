@@ -1,6 +1,8 @@
 
+import 'package:demo/provider/user_info.dart';
 import 'package:demo/z_tools/app_widget/my_separator.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../public_header.dart';
 
@@ -10,6 +12,30 @@ class PushQrCode extends StatefulWidget {
 }
 
 class _PushQrCodeState extends State<PushQrCode> {
+
+  var data;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getData();
+  }
+
+  getData(){
+    DioUtils.instance.post(Api.homeGetPushCodeInfoUrl,onSucceed: (response){
+      if(response is Map){
+        if(mounted){
+          setState(() {
+            data = response;
+          });
+        }
+      }
+    },onFailure: (code,msg){
+
+    });
+  }
+  
   @override
   Widget build(BuildContext context) {
 
@@ -53,7 +79,7 @@ class _PushQrCodeState extends State<PushQrCode> {
                                 SizedBox(height: 80,),
                                 Expanded(child: Container(
                                   padding: EdgeInsets.all(20.0),
-                                  child: LoadAssetImage('defaultImage',radius: 0.0,),
+                                  child: LoadImage(AppClass.data(data, 'code_url')),
                                 )),
                                 SizedBox(height: 30,),
                                 SizedBox(
@@ -72,7 +98,7 @@ class _PushQrCodeState extends State<PushQrCode> {
                                             text: '代叫上架扫此码注册为代叫商家后,每成功代叫1单,您即可得'
                                         ),
                                         TextSpan(
-                                            text: '10',
+                                            text: AppClass.data(data, 'integral'),
                                             style: TextStyle(fontSize: 15,color: AppColors.orangeColor)
                                         ),
                                         TextSpan(
@@ -86,7 +112,7 @@ class _PushQrCodeState extends State<PushQrCode> {
                             Positioned(top: 0,left: 0,right: 0,child: Container(
                               height: 50.0,
                               alignment: Alignment.center,
-                              child: Text('梅超风的代叫推广码',style: TextStyles.getWhiteBoldText(15)),
+                              child: Text('${Provider.of<UserInfo>(context,listen: false).nickname??''}的代叫推广码',style: TextStyles.getWhiteBoldText(15)),
                             ))
                           ],
                         ),

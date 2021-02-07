@@ -12,12 +12,17 @@ class DriverPointsRecord extends StatefulWidget {
 class _DriverPointsRecordState extends State<DriverPointsRecord> {
 
   EasyRefreshController _controller;
-  List _list = ['','','','',];
+  List _list = [];
   /// 是否正在加载数据
   bool _isLoading = false;
   int _page = 1;
   int _maxPage = 1;
   StateType _stateType = StateType.loading;
+
+  var branchData;
+  //
+  var principleData;
+  var punishData;
 
   @override
   void initState() {
@@ -25,7 +30,8 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
     super.initState();
     _controller = EasyRefreshController();
     _onRefresh();
-
+    getPrinciple();
+    getPunish();
   }
 
   Future _onRefresh() async {
@@ -33,8 +39,57 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
     getData();
   }
 
+  //代驾分基本原则
+  getPrinciple(){
+    
+    DioUtils.instance.post(Api.minePrincipleUrl,onSucceed: (response){
+      setState(() {
+        principleData = response;
+      });
+    },onFailure: (code,msg){
+
+    });
+  }
+  //代驾分处罚标准
+  getPunish(){
+    DioUtils.instance.post(Api.minePunishUrl,onSucceed: (response){
+      setState(() {
+        punishData = response;
+      });
+    },onFailure: (code,msg){
+
+    });
+  }
+
   getData(){
 
+    DioUtils.instance.post(Api.mineBranchRecordUrl,onSucceed: (response){
+        if(response is Map){
+          branchData = response;
+          var data = branchData['list'];
+          if(data['list']!=null){
+            _maxPage = data['countPage'];
+            if(data['list'] is List){
+              var listData = data['list'];
+              showDataList(listData);
+            }else{
+              setState(() {
+                _isLoading = false;
+              });
+            }
+          }else{
+            setState(() {
+              _isLoading = false;
+            });
+          }
+        }else{
+          setState(() {
+            _isLoading = false;
+          });
+        }
+    },onFailure: (code,msg){
+
+    });
   }
 
   showDataList(List dataList) {
@@ -110,7 +165,7 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
                       padding: EdgeInsets.only(left: 16,right: 16,bottom: 20),
                       child: Column(
                         children: <Widget>[
-                          AppCell(title: '周期截止日期',titleStyle: TextStyles.whiteAnd14, content: '2020.12.12',contentStyle: TextStyles.whiteAnd14,),
+                          AppCell(title: '周期截止日期',titleStyle: TextStyles.whiteAnd14, content: AppClass.data(branchData, 'end_time'),contentStyle: TextStyles.whiteAnd14,),
                           Expanded(child: Row(
                             children: <Widget>[
                               Expanded(
@@ -120,7 +175,7 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
                                   children: <Widget>[
                                     TextContainer(
                                         alignment: Alignment.center,
-                                        title: '09', height: 40, style: TextStyles.getWhiteBoldText(30)),
+                                        title: AppClass.data(branchData, 'branch'), height: 40, style: TextStyles.getWhiteBoldText(30)),
                                     TextContainer(
                                         alignment: Alignment.center,
                                         title: '剩余代驾分', height: 30, style: TextStyles.whiteAnd14),
@@ -135,10 +190,10 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
                                   children: <Widget>[
                                     TextContainer(
                                         alignment: Alignment.center,
-                                        title: '03', height: 40, style: TextStyles.getWhiteBoldText(30)),
+                                        title: AppClass.data(branchData, 'branchs'), height: 40, style: TextStyles.getWhiteBoldText(30)),
                                     TextContainer(
                                         alignment: Alignment.center,
-                                        title: '已扣费', height: 30, style: TextStyles.whiteAnd14),
+                                        title: '已扣除', height: 30, style: TextStyles.whiteAnd14),
 
                                   ],
                                 ),
@@ -161,7 +216,7 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
                   children: <Widget>[
                     Expanded(
                         child: AppButton(radius: 8.0,bgColor: AppColors.lightOrangeColor,title: '代驾分基本规则',image: '代驾分记录规则',imageSize: 30.0,buttonType: ButtonType.leftImage, onPress: (){
-                          AppShowBottomDialog.showDelegateSheetDialog(context, '代驾分基本规则', '代驾分基本规则','', (){
+                          AppShowBottomDialog.showDelegateSheetDialog(context, '代驾分基本规则', AppClass.data(principleData, 'content'),'', (){
 
                           });
                         })
@@ -169,7 +224,7 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
                     SizedBox(width: 20,),
                     Expanded(
                         child: AppButton(radius: 8.0,bgColor: AppColors.lightBlueColor,title: '代驾分触发标准',image: '代驾分记录处罚标准',imageSize: 30.0,buttonType: ButtonType.leftImage, onPress: (){
-                          AppShowBottomDialog.showDelegateSheetDialog(context, '代驾分记录处罚标准', '代驾分记录处罚标准','', (){
+                          AppShowBottomDialog.showDelegateSheetDialog(context, '代驾分记录处罚标准', AppClass.data(punishData, 'content'),'', (){
 
                           });
                         })
@@ -178,11 +233,12 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
                 ),
               ),
             ),
-            _list.isEmpty?
-            Container(
-                height: MediaQuery.of(context).size.height-50,child: StateLayout(type: _isLoading?StateType.loading:_stateType)):
-                SliverList(
+            _list.isEmpty
+                ? SliverToBoxAdapter(child: Container(
+                  height: MediaQuery.of(context).size.width,child: StateLayout(type: _isLoading?StateType.loading:_stateType)),)
+                : SliverList(
                     delegate: SliverChildBuilderDelegate((BuildContext context,int index){
+                      var data = _list[index];
                         return Container(
                           color: AppColors.whiteColor,
                           margin: EdgeInsets.only(top: 10.0),
@@ -190,7 +246,7 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
                           child: Column(
                             children: <Widget>[
                               TextContainer(
-                                  title: '2020-12-12',
+                                  title: AppClass.data(data, 'create_time'),
                                   height: 30,
                                   style: TextStyle(
                                       fontSize: 18,
@@ -198,8 +254,8 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
                                       color: AppColors.mainColor
                                   )
                               ),
-                              AppCell(height: 30,edgeInsets: EdgeInsets.all(0.0),title: '扣分', content: '2',contentStyle: TextStyle(fontSize: 14,color: AppColors.red),),
-                              AppCell(height: 30,edgeInsets: EdgeInsets.all(0.0),title: '备注', content: '客户举报,客户争吵',contentStyle: TextStyles.blackAnd14,),
+                              AppCell(height: 30,edgeInsets: EdgeInsets.all(0.0),title: '变化数量', content: AppClass.data(data, 'num'),contentStyle: TextStyle(fontSize: 14,color: AppColors.red),),
+                              AppCell(height: 30,edgeInsets: EdgeInsets.all(0.0),title: '变化说明', content: AppClass.data(data, 'msg'),contentStyle: TextStyles.blackAnd14,),
                             ],
                           ),
                       );
@@ -209,4 +265,6 @@ class _DriverPointsRecordState extends State<DriverPointsRecord> {
       ),
     );
   }
+
+
 }

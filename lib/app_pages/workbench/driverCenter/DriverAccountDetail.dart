@@ -1,6 +1,7 @@
 
 import 'package:demo/app_pages/workbench/driverCenter/DriverRecharge.dart';
 import 'package:demo/app_pages/workbench/driverCenter/DriverWithdrawal.dart';
+import 'package:demo/app_pages/workbench/driverCenter/DriverWithdrawalList.dart';
 import 'package:demo/z_tools/app_widget/AppText.dart';
 import 'package:demo/z_tools/app_widget/app_stack_widget.dart';
 import 'package:demo/z_tools/app_widget/container_add_line_widget.dart';
@@ -18,47 +19,123 @@ class DriverAccountDetail extends StatefulWidget {
 class _DriverAccountDetailState extends State<DriverAccountDetail> {
 
   EasyRefreshController _controller;
-  List _list = ['','','','','','','','','','','','','','','','','','','','',];
+  List _list = [];
   /// 是否正在加载数据
   bool _isLoading = false;
   int _page = 1;
   int _maxPage = 1;
-  StateType _stateType = StateType.loading;
 
   ///时间
   String time;
+  var detailData;
+  var baozhangType;
+  List baozhangList = [];
+
+  bool isFirst = true;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    readData();
+    DateTime dateTime = DateTime.now();
+    time = dateTime.year.toString()+'-'+dateTime.month.toString()+'-'+dateTime.day.toString();
     _controller = EasyRefreshController();
     _onRefresh();
 
   }
+  //读取缓存
+  readData(){
+    AppClass.readData(Api.mineBalanceUrl).then((value){
+      if(value!=null){
+        setState(() {
+          detailData = value;
+        });
+      }
+    });
+    AppClass.readData(Api.mineDimoneyRecordUrl).then((value){
+      if(value!=null){
+        setState(() {
+          _list = value;
+        });
+      }
+    });
+  }
 
   Future _onRefresh() async {
     _page = 1;
-    getData();
+    getDetailInfoData();
+  }
+  //获取账户余额、保障金、邀请人数、变化类型
+  getDetailInfoData(){
+    DioUtils.instance.post(Api.mineBalanceUrl, onFailure: (code,msg){
+      reloadState();
+    },onSucceed: (response){
+      if(response is Map){
+        detailData = response;
+        AppClass.saveData(detailData, Api.mineBalanceUrl);
+        if(detailData['imoney_type']!=null){
+          if(detailData['imoney_type'] is List){
+            baozhangList = detailData['imoney_type'];
+            if(baozhangList.isNotEmpty){
+              baozhangType = baozhangList.first;
+              getBaozhangData(baozhangType);
+            }else{
+              debugPrint('返回的数据是空的');
+              reloadState();
+            }
+          }else{
+            Toast.show('返回的数据类型有问题，请联系后台');
+            reloadState();
+          }
+        }else{
+          Toast.show('返回的数据类型有问题，请联系后台');
+          reloadState();
+        }
+      }else{
+        Toast.show('返回的数据类型有问题，请联系后台');
+        reloadState();
+      }
+    });
   }
 
-  getData(){
+  reloadState(){
+    if(mounted){
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
+  ///获取保障金明细
+  getBaozhangData(Map data){
+
+    var parameters = {
+      'p':_page,
+      'pageNum':15,
+      'type':AppClass.data(data, 'type'),
+      'date':time
+    };
+    DioUtils.instance.post(Api.mineDimoneyRecordUrl,data: parameters, onFailure: (code,msg){
+     reloadState();
+    },onSucceed: (response){
+      if(response is Map){
+        List list = response['list'];
+        _maxPage = response['countPage'];
+        showDataList(list);
+      }else{
+        reloadState();
+      }
+    });
   }
 
   showDataList(List dataList) {
     if (_page == 1) {
       _list.clear();
+      AppClass.saveData(dataList, Api.mineDimoneyRecordUrl);
     }
     _list.addAll(dataList);
-    if(mounted){
-      setState(() {
-        _isLoading = false;
-        if (_list.length == 0) {
-          _stateType = StateType.empty;
-        }
-      });
-    }
+    reloadState();
   }
 
   Future _loadMore() async {
@@ -74,7 +151,7 @@ class _DriverAccountDetailState extends State<DriverAccountDetail> {
     }
     _isLoading = true;
     _page++;
-    getData();
+    getBaozhangData(baozhangType);
   }
 
   bool _hasMore() {
@@ -150,7 +227,7 @@ class _DriverAccountDetailState extends State<DriverAccountDetail> {
                                             SizedBox(height: 5,),
                                             TextContainer(
                                                 alignment: Alignment.center,
-                                                title: '969.99',
+                                                title: AppClass.data(detailData, 'imoney'),
                                                 height: 30.0,
                                                 style: TextStyles.getBlackBoldText(18)),
 
@@ -178,7 +255,7 @@ class _DriverAccountDetailState extends State<DriverAccountDetail> {
                                             ),
                                             TextContainer(
                                                 alignment: Alignment.center,
-                                                title: '969.99',
+                                                title: AppClass.data(detailData, 'money'),
                                                 height: 30.0,
                                                 style: TextStyles.getBlackBoldText(18)),
 
@@ -192,7 +269,7 @@ class _DriverAccountDetailState extends State<DriverAccountDetail> {
                                           children: <Widget>[
                                             TextContainer(
                                                 alignment: Alignment.center,
-                                                title: '邀请人数 >',
+                                                title: '邀请人数',
                                                 height: 30.0,
                                                 style: TextStyle(
                                                     fontSize: 14,
@@ -200,7 +277,7 @@ class _DriverAccountDetailState extends State<DriverAccountDetail> {
                                             SizedBox(height: 5,),
                                             TextContainer(
                                                 alignment: Alignment.center,
-                                                title: '969.99',
+                                                title: AppClass.data(detailData, 'count_user'),
                                                 height: 30.0,
                                                 style: TextStyles.getBlackBoldText(18)),
 
@@ -223,9 +300,14 @@ class _DriverAccountDetailState extends State<DriverAccountDetail> {
                                           AppShowBottomDialog.showBottomListSheet(
                                               context,
                                               '类型选择',
-                                              ['全部','订单保障费','信息费','线下充值','红包','离职退费','订单支付扣除','收入',],
+                                              baozhangList,
                                               (value){
-
+                                                baozhangType = value;
+                                                setState(() {
+                                                  _isLoading=true;
+                                                  _list.clear();
+                                                });
+                                                _onRefresh();
                                               });
                                       })),
                                       SizedBox(
@@ -250,11 +332,13 @@ class _DriverAccountDetailState extends State<DriverAccountDetail> {
                 _list.isEmpty?
                 SliverToBoxAdapter(
                   child: Container(
-                      height: 300,child: StateLayout(type: _isLoading?StateType.loading:_stateType)
+                      height: MediaQuery.of(context).size.width,child: StateLayout(type: _isLoading?StateType.loading:StateType.empty)
                   ),
                 ):
                 SliverList(
                     delegate: SliverChildBuilderDelegate((BuildContext context,int index){
+                      var data = _list[index];
+                      double value = double.parse(AppClass.data(data, 'num'));
                       return ContainerAddLineWidget(
                           height: 65,
                           child: Container(
@@ -263,14 +347,14 @@ class _DriverAccountDetailState extends State<DriverAccountDetail> {
                               children: <Widget>[
                                 Expanded(child: Row(
                                   children: <Widget>[
-                                    Expanded(child: AppText(alignment: Alignment.centerLeft,text: '订单保障费/31321321321321321')),
-                                    Container(width: 120.0,alignment: Alignment.centerRight,child: Text('-122.99',style: TextStyle(fontSize: 14,color: AppColors.red, fontWeight: FontWeight.bold),),)
+                                    Expanded(child: AppText(alignment: Alignment.centerLeft,text: 'msg')),
+                                    Container(width: 100.0,alignment: Alignment.centerRight,child: Text(value.toString(),style: TextStyle(fontSize: 14,color: value>0?AppColors.greenColor:AppColors.red, fontWeight: FontWeight.bold),),)
                                   ],
                                 )),
                                 Expanded(child: Row(
                                   children: <Widget>[
-                                    Container(width: 150.0,alignment: Alignment.centerLeft,child: Text('2020-12-12 12:12:12',style: TextStyle(fontSize: 12,color: AppColors.black54Color),),),
-                                    Expanded(child: AppText(alignment: Alignment.centerRight,text: '余额: 1500.00',fonSize: 12,)),
+                                    Container(width: 150.0,alignment: Alignment.centerLeft,child: Text(AppClass.data(data, 'create_time'),style: TextStyle(fontSize: 12,color: AppColors.black54Color),),),
+                                    Expanded(child: AppText(alignment: Alignment.centerRight,text: '余额: ${AppClass.data(data, 'money')}',fonSize: 12,)),
                                   ],
                                 )),
                               ],
@@ -301,16 +385,16 @@ class _DriverAccountDetailState extends State<DriverAccountDetail> {
                       AppPush.pushDefault(context, DriverRecharge());
                   }),
                 ),
-                SizedBox(width: 10.0,),
-                SizedBox(
-                  height: 40.0,
-                  width: 120.0,
-                  child: AppButton(title: '提现',radius: 40.0, bgColor: AppColors.mainColor,textStyle: TextStyles.whiteAnd14, onPress: (){
-                    AppShowBottomDialog.showDelegateSheetDialog(context, '提现说明', '这就是提现说明文档','', (){
-                      AppPush.pushDefault(context, DriverWithdrawal());
-                    });
-                  }),
-                ),
+//                SizedBox(width: 10.0,),
+//                SizedBox(
+//                  height: 40.0,
+//                  width: 120.0,
+//                  child: AppButton(title: '提现',radius: 40.0, bgColor: AppColors.mainColor,textStyle: TextStyles.whiteAnd14, onPress: (){
+//
+//                    AppPush.pushDefault(context, DriverWithdrawalList());
+//
+//                  }),
+//                ),
               ],
             ),
           )
@@ -333,7 +417,12 @@ class _DriverAccountDetailState extends State<DriverAccountDetail> {
           setState(() {
             String currentTime = dateTime.year.toString()+'-'+dateTime.month.toString()+'-'+'01';
             setState(() {
-              time = '$currentTime';
+              time = currentTime;
+              setState(() {
+                _isLoading=true;
+                _list.clear();
+              });
+              getBaozhangData(baozhangType);
             });
           });
         }

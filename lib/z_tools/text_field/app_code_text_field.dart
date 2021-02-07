@@ -1,5 +1,6 @@
 
 import 'package:demo/z_tools/net/md5.dart';
+import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 
 import '../../public_header.dart';
@@ -26,7 +27,7 @@ class AppCodeTextField extends StatefulWidget {
   final String keyName;
   final TextFieldMode mode;
   final double height;
-  final String type; //类型 1.注册、2.忘记密码、2.验证码登录
+  final String type;
   final double radius;
   final Color bgColor;
   final EdgeInsets edgeInsets;
@@ -110,14 +111,20 @@ class _AppCodeTextFieldState extends State<AppCodeTextField> {
       debugPrint('发起获取验证码的网络请求:-------------> getCode');
       var parameters = {};
       parameters['phone'] = widget.controllerPhone.text;
-      parameters['sign'] = generateMd5('subang_'+widget.controllerPhone.text);
+      parameters['sign'] = generateMd5(''+widget.controllerPhone.text+'astgodrives');
+      /*
+        1. 登录 2. 注册
+       */
       if(widget.type!=null){
-        parameters['type'] = widget.type;
+        parameters['code_type'] = widget.type;
+        parameters['province_id'] = SpUtil.getString(AppValue.user_province_id,defValue: '');
+        parameters['city_id'] = SpUtil.getString(AppValue.user_city_id,defValue: '');
+        parameters['area_id'] = SpUtil.getString(AppValue.user_area_id,defValue: '');
       }else{
-        parameters['type'] = '2';
+        parameters['code_type'] = '1';
       }
 
-      DioUtils.instance.post(Api.getCodeUrl,data: parameters, onFailure: (code,msg){
+      DioUtils.instance.post(Api.getCodeUrl,context: this.context,data: parameters, onFailure: (code,msg){
         Toast.show(msg);
       }, onSucceed: (result){
         startRunCode();

@@ -6,9 +6,18 @@ import 'package:demo/z_tools/app_widget/app_cell.dart';
 import 'package:demo/z_tools/app_widget/container_add_line_widget.dart';
 import 'package:demo/z_tools/app_widget/keyboard_action_widget.dart';
 import 'package:demo/z_tools/app_widget/text_container.dart';
+import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 
 class DriverWithdrawal extends StatefulWidget {
+
+  final String idStr;
+  const DriverWithdrawal({
+    Key key,
+    @required this.idStr
+  }) : super(key: key);
+
+
   @override
   _DriverWithdrawalState createState() => _DriverWithdrawalState();
 }
@@ -26,11 +35,25 @@ class _DriverWithdrawalState extends State<DriverWithdrawal> {
   FocusNode _focusNode2 = new FocusNode();
   FocusNode _focusNode3 = new FocusNode();
 
+  WithdraealBean bean;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    getData();
+  }
+
+  getData(){
+    DioUtils.instance.post(Api.withdrawInfoUrl,onSucceed: (response){
+        if(response is Map){
+          setState(() {
+            bean = WithdraealBean.fromJson(response);
+          });
+        }
+    },onFailure: (code,msg){
+
+    });
   }
 
   @override
@@ -41,6 +64,11 @@ class _DriverWithdrawalState extends State<DriverWithdrawal> {
           backgroundColor: AppColors.bgColor,
           appBar: ShowWhiteAppBar(
             centerTitle: '账户提现',
+            rightWidget: AppButton(title: '提现说明', onPress: (){
+              AppShowBottomDialog.showDelegateSheetDialog(context, '提现说明', bean?.content??'','', (){
+
+              });
+            }),
           ),
           body: ListView(
             children: <Widget>[
@@ -58,14 +86,14 @@ class _DriverWithdrawalState extends State<DriverWithdrawal> {
                         ),
                         SizedBox(
                           width: 150.0,
-                          child: AppText(alignment: Alignment.centerLeft,fonSize: 16,text: '15138670377'),
+                          child: AppText(alignment: Alignment.centerLeft,fonSize: 16,text: SpUtil.getString(AppValue.login_account,defValue: '')),
                         ),
                         Expanded(
                             child: AppText(
                                 alignment: Alignment.centerRight,
                                 color: AppColors.black54Color,
                                 fonSize: 13,
-                                text: '(可提现: 18：00)'
+                                text: '(可提现: ${bean?.money??''})'
                             )
                         )
                       ],
@@ -80,7 +108,7 @@ class _DriverWithdrawalState extends State<DriverWithdrawal> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
-                        SizedBox(width: 80.0,child: AppText(alignment: Alignment.centerLeft,text: '充值金额'),),
+                        SizedBox(width: 80.0,child: AppText(alignment: Alignment.centerLeft,text: '提现金额'),),
                         Expanded(
                           child: Container(
                             child: TextField(
@@ -99,6 +127,11 @@ class _DriverWithdrawalState extends State<DriverWithdrawal> {
                                   borderSide: BorderSide.none,
                                 ),
                               ),
+                              onChanged: (value){
+                                setState(() {
+
+                                });
+                              },
                               onSubmitted: (value){
                                 _focusNode.unfocus();
                               },
@@ -113,127 +146,140 @@ class _DriverWithdrawalState extends State<DriverWithdrawal> {
               ContainerAddLineWidget(
                   edgeInsets: EdgeInsets.all(0.0),
                   disW: 0.0,
-                  child: AppCell(alignment: Alignment.centerLeft,title: '手续费', content: '0.01%')),
+                  child: AppCell(alignment: Alignment.centerLeft,title: '手续费', content: '${bean?.percent_drive??''}%')),
               ContainerAddLineWidget(
                   edgeInsets: EdgeInsets.all(0.0),
                   disW: 0.0,
                   child: AppCell(
                     title: '实际到账金额',
-                    content: '99.3元',contentStyle: TextStyle(fontSize: 14,color: AppColors.red),
+                    content: _editingControllerMoney.text.isNotEmpty?'${double.parse(_editingControllerMoney.text)*((100-(int.parse(bean?.percent_drive??'0')))/100)}元':'0元',contentStyle: TextStyle(fontSize: 14,color: AppColors.red),
                   )
+              ),
+              ContainerAddLineWidget(
+                edgeInsets: EdgeInsets.all(0.0),
+                disW: 0.0,
+                child: AppCell(
+                    height: 20,
+                    title: '最小提现金额',
+                    titleStyle: TextStyle(fontSize: 14,color: AppColors.orangeColor),
+                    content: '${bean?.min_money_drive??'0'}元',
+                    contentStyle: TextStyle(fontSize: 12,color: AppColors.orangeColor),
+                ),
               ),
               SizedBox(height: 10.0,),
-              ContainerAddLineWidget(
-                  edgeInsets: EdgeInsets.all(0.0),
-                  disW: 0.0,
-                  child: Container(
-                    padding: EdgeInsets.only(left: 16,right: 16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        SizedBox(width: 100.0,child: AppText(alignment: Alignment.centerLeft,text: '选择账户类型'),),
-                        Expanded(child: SizedBox()),
-                        SizedBox(width: 100.0,child: AppButton(title: '微信',buttonType: ButtonType.leftImage,imageSize: 15,image: payment==1?'选择2':'选择1', onPress: (){
-                          setState(() {
-                            payment = 1;
-                          });
-                        }),),
-                        SizedBox(width: 100.0,child: AppButton(title: '支付宝',buttonType: ButtonType.leftImage,imageSize: 15,image: payment==2?'选择2':'选择1', onPress: (){
-                          setState(() {
-                            payment = 2;
-                          });
-                        }),),
-                      ],
-                    ),
-                  )
-              ),
-              ContainerAddLineWidget(
-                  edgeInsets: EdgeInsets.all(0.0),
-                  disW: 0.0,
-                  child: Container(
-                    padding: EdgeInsets.only(left: 16,right: 16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        SizedBox(width: 80.0,child: AppText(alignment: Alignment.centerLeft,text: '账户'),),
-                        Expanded(
-                          child: Container(
-                            child: TextField(
-                              controller: _editingControllerAccount,
-                              focusNode: _focusNode2,
-                              keyboardType: TextInputType.text,
-                              textAlign: TextAlign.right,
-                              style: TextStyle(fontSize: 20,color: AppColors.mainColor),
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
-                                hintText: '请输入提现账号',
-                                hintStyle: TextStyle(color: AppColors.black54Color,fontSize: 14),
-                                counterText: '',
-                                border: new OutlineInputBorder(
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                              onSubmitted: (value){
-                                _focusNode2.unfocus();
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-              ),
-              ContainerAddLineWidget(
-                  edgeInsets: EdgeInsets.all(0.0),
-                  disW: 0.0,
-                  child: Container(
-                    padding: EdgeInsets.only(left: 16,right: 16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        SizedBox(width: 80.0,child: AppText(alignment: Alignment.centerLeft,text: '账号姓名'),),
-                        Expanded(
-                          child: Container(
-                            child: TextField(
-                              controller: _editingControllerName,
-                              focusNode: _focusNode3,
-                              keyboardType: TextInputType.text,
-                              textAlign: TextAlign.right,
-                              style: TextStyle(fontSize: 20,color: AppColors.mainColor),
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
-                                hintText: '请输入提现账号姓名',
-                                hintStyle: TextStyle(color: AppColors.black54Color,fontSize: 14),
-                                counterText: '',
-                                border: new OutlineInputBorder(
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                              onSubmitted: (value){
-                                _focusNode3.unfocus();
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-              ),
-              Container(color: AppColors.whiteColor,padding: EdgeInsets.only(left: 16,right: 16),child: TextContainer(title: '上传收款码', height: 40.0, style: TextStyles.blackAnd14)),
-              AppAddImageWidget(
-                  imageFiles: (List list){
-                    image = list.first;
-                  }
-              ),
+//              ContainerAddLineWidget(
+//                  edgeInsets: EdgeInsets.all(0.0),
+//                  disW: 0.0,
+//                  child: Container(
+//                    padding: EdgeInsets.only(left: 16,right: 16),
+//                    child: Row(
+//                      crossAxisAlignment: CrossAxisAlignment.center,
+//                      children: <Widget>[
+//                        SizedBox(width: 100.0,child: AppText(alignment: Alignment.centerLeft,text: '选择账户类型'),),
+//                        Expanded(child: SizedBox()),
+//                        SizedBox(width: 100.0,child: AppButton(title: '微信',buttonType: ButtonType.leftImage,imageSize: 15,image: payment==1?'选择2':'选择1', onPress: (){
+//                          setState(() {
+//                            payment = 1;
+//                          });
+//                        }),),
+//                        SizedBox(width: 100.0,child: AppButton(title: '支付宝',buttonType: ButtonType.leftImage,imageSize: 15,image: payment==2?'选择2':'选择1', onPress: (){
+//                          setState(() {
+//                            payment = 2;
+//                          });
+//                        }),),
+//                      ],
+//                    ),
+//                  )
+//              ),
+//              ContainerAddLineWidget(
+//                  edgeInsets: EdgeInsets.all(0.0),
+//                  disW: 0.0,
+//                  child: Container(
+//                    padding: EdgeInsets.only(left: 16,right: 16),
+//                    child: Row(
+//                      crossAxisAlignment: CrossAxisAlignment.center,
+//                      children: <Widget>[
+//                        SizedBox(width: 80.0,child: AppText(alignment: Alignment.centerLeft,text: '账户'),),
+//                        Expanded(
+//                          child: Container(
+//                            child: TextField(
+//                              controller: _editingControllerAccount,
+//                              focusNode: _focusNode2,
+//                              keyboardType: TextInputType.text,
+//                              textAlign: TextAlign.right,
+//                              style: TextStyle(fontSize: 20,color: AppColors.mainColor),
+//                              decoration: InputDecoration(
+//                                contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
+//                                hintText: '请输入提现账号',
+//                                hintStyle: TextStyle(color: AppColors.black54Color,fontSize: 14),
+//                                counterText: '',
+//                                border: new OutlineInputBorder(
+//                                  borderSide: BorderSide.none,
+//                                ),
+//                              ),
+//                              onSubmitted: (value){
+//                                _focusNode2.unfocus();
+//                              },
+//                            ),
+//                          ),
+//                        ),
+//                      ],
+//                    ),
+//                  )
+//              ),
+//              ContainerAddLineWidget(
+//                  edgeInsets: EdgeInsets.all(0.0),
+//                  disW: 0.0,
+//                  child: Container(
+//                    padding: EdgeInsets.only(left: 16,right: 16),
+//                    child: Row(
+//                      crossAxisAlignment: CrossAxisAlignment.center,
+//                      children: <Widget>[
+//                        SizedBox(width: 80.0,child: AppText(alignment: Alignment.centerLeft,text: '账号姓名'),),
+//                        Expanded(
+//                          child: Container(
+//                            child: TextField(
+//                              controller: _editingControllerName,
+//                              focusNode: _focusNode3,
+//                              keyboardType: TextInputType.text,
+//                              textAlign: TextAlign.right,
+//                              style: TextStyle(fontSize: 20,color: AppColors.mainColor),
+//                              decoration: InputDecoration(
+//                                contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
+//                                hintText: '请输入提现账号姓名',
+//                                hintStyle: TextStyle(color: AppColors.black54Color,fontSize: 14),
+//                                counterText: '',
+//                                border: new OutlineInputBorder(
+//                                  borderSide: BorderSide.none,
+//                                ),
+//                              ),
+//                              onSubmitted: (value){
+//                                _focusNode3.unfocus();
+//                              },
+//                            ),
+//                          ),
+//                        ),
+//                      ],
+//                    ),
+//                  )
+//              ),
+//              Container(color: AppColors.whiteColor,padding: EdgeInsets.only(left: 16,right: 16),child: TextContainer(title: '上传收款码', height: 40.0, style: TextStyles.blackAnd14)),
+//              AppAddImageWidget(
+//                  imageFiles: (List list){
+//                    image = list.first;
+//                  }
+//              ),
+
+
+              SizedBox(height: 150.0,),
               Container(
-                color: AppColors.whiteColor,
                 padding: EdgeInsets.only(left: 16,right: 16),
-                height: 150.0,
+                height: 45.0,
                 alignment: Alignment.center,
                 child: SizedBox(
                   height: 45.0,
                   child: AppButton(radius: 45.0, bgColor: AppColors.mainColor,title: '申请提现',textStyle: TextStyles.whiteAnd14, onPress:(){
-
+                    startSubmit();
                   }),
                 ),
               )
@@ -242,4 +288,55 @@ class _DriverWithdrawalState extends State<DriverWithdrawal> {
         )
     );
   }
+
+  startSubmit(){
+    if(_editingControllerMoney.text.isEmpty){
+      Toast.show('请输入提现金额');
+      return;
+    }
+    if(double.parse(_editingControllerMoney.text)<double.parse(bean?.min_money_drive??'0')){
+      Toast.show('提现金额不得小于最小提现金额');
+      return;
+    }
+    var data = {
+      'id':widget.idStr,
+      'money':_editingControllerMoney.text
+    };
+    DioUtils.instance.post(Api.withdrawSubmitApplicationUrl,data: data,onSucceed: (response){
+      Toast.show('发起提现申请成功！');
+      Navigator.pop(this.context);
+    },onFailure: (code,msg){
+
+    });
+  }
+
+
+}
+
+
+class WithdraealBean {
+    String content;
+    String min_money_drive;
+    String money;
+    String percent_drive;
+
+    WithdraealBean({this.content, this.min_money_drive, this.money, this.percent_drive});
+
+    factory WithdraealBean.fromJson(Map<String, dynamic> json) {
+        return WithdraealBean(
+            content: json['content'], 
+            min_money_drive: json['min_money_drive'].toString(),
+            money: json['money'].toString(),
+            percent_drive: json['percent_drive'].toString(),
+        );
+    }
+
+    Map<String, dynamic> toJson() {
+        final Map<String, dynamic> data = new Map<String, dynamic>();
+        data['content'] = this.content;
+        data['min_money_drive'] = this.min_money_drive;
+        data['money'] = this.money;
+        data['percent_drive'] = this.percent_drive;
+        return data;
+    }
 }

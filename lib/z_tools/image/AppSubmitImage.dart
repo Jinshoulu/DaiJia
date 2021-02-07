@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:demo/z_tools/dialog/default_bottom_sheet.dart';
+import 'package:demo/z_tools/net/LoadingView.dart';
 import 'package:dio/dio.dart';
 import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
@@ -26,9 +27,11 @@ class AppSubmitImage {
             onPress1: (){
               Permission.camera.request().then((value)async{
                 if(value.isGranted){
+                  LoadingView.show(context);
                   var image = await ImagePicker.pickImage(source: ImageSource.camera);
                   File file = await FlutterNativeImage.compressImage(image.path, quality: 30, percentage: 50);
                   uploadFile(file).then((value){
+                    LoadingView.hide();
                     if(value=='失败'){
                       Toast.show('图片提交失败,请重试');
                       return;
@@ -147,8 +150,8 @@ class Data {
     String fileext;
     String filename;
     int filesize;
-    String fileurl;
-    String fileurls;
+    String fileurl;//全路径
+    String fileurls;//半路径
     String mime;
     String name;
 

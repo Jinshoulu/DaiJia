@@ -8,6 +8,14 @@ class ExitApp {
   ExitApp();
 }
 
+
+///推送通知
+class JPushNotification {
+  String type;
+  String tid;
+  JPushNotification(this.type, this.tid);
+}
+
 ///播放音频
 class PlayerAudio {
   String audioName;

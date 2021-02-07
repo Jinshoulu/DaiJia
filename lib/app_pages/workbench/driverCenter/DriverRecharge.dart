@@ -1,10 +1,13 @@
 
+import 'package:demo/app_pages/workbench/beans/RechargeBean.dart';
+import 'package:demo/provider/user_info.dart';
 import 'package:demo/public_header.dart';
 import 'package:demo/z_tools/app_widget/AppText.dart';
 import 'package:demo/z_tools/app_widget/container_add_line_widget.dart';
 import 'package:demo/z_tools/app_widget/keyboard_action_widget.dart';
 import 'package:demo/z_tools/app_widget/text_container.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class DriverRecharge extends StatefulWidget {
   @override
@@ -21,20 +24,50 @@ class _DriverRechargeState extends State<DriverRecharge> {
   List images = ['充值-支付宝','充值-微信','充值-银联'];
   List titles = ['支付宝','微信支付','银联支付'];
 
-  List money = ['20元','30元','50元','100元','200元','500元',];
-  List money2 = ['20','30','50','100','200','500',];
-
   int  selectMoneyIndex = 0;
+  RechargeBean _rechargeBean;
+  List<Data> _list = [];
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
-    _editingController.text = money2[selectMoneyIndex];
-
+    readData();
+    getData();
   }
 
+  //获取数据
+  getData(){
+    DioUtils.instance.post(Api.orderRechargePackageUrl, onFailure: (code,msg){
+
+    },onSucceed: (response){
+        if(response is Map){
+          AppClass.saveData(response, Api.orderRechargePackageUrl);
+          reloadState(response);
+        }
+    });
+  }
+
+  //读取缓存
+  readData(){
+    AppClass.readData(Api.orderRechargePackageUrl).then((value){
+      if(value!=null){
+       reloadState(value);
+      }
+    });
+  }
+
+  reloadState(data){
+    if(mounted){
+      setState(() {
+        _rechargeBean = RechargeBean.fromJson(data);
+        _list = _rechargeBean.list;
+        if(_list.length>0){
+          _editingController.text = _list[selectMoneyIndex].money;
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +93,7 @@ class _DriverRechargeState extends State<DriverRecharge> {
                 floating: false,
                 pinned: true,
                 snap: false,
-                expandedHeight: MediaQuery.of(context).size.width-60,
+                expandedHeight: MediaQuery.of(context).size.width-30,
                 flexibleSpace: new FlexibleSpaceBar(
                   background: Stack(
                     children: <Widget>[
@@ -77,12 +110,16 @@ class _DriverRechargeState extends State<DriverRecharge> {
                                   height: 30.0,
                                   child: Row(
                                     children: <Widget>[
-                                      SizedBox(width: 120.0,child: AppText(alignment: Alignment.centerLeft,text: '充值账号',color: AppColors.whiteColor,),),
-                                      Expanded(child: AppText(text: '余额: 1599.99元',color: AppColors.whiteColor,alignment: Alignment.centerRight,),)
+                                      SizedBox(
+                                        width: 120.0,
+                                        child: AppText(
+                                          alignment: Alignment.centerLeft,
+                                          text: '充值账号',color: AppColors.whiteColor,),),
+                                      Expanded(child: AppText(text: '余额: ${Provider.of<UserInfo>(context).money??''}元',color: AppColors.whiteColor,alignment: Alignment.centerRight,),)
                                     ],
                                   ),
                                 ),
-                                TextContainer(title: '15538670377', height: 40.0, style: TextStyles.getWhiteBoldText(30)),
+                                TextContainer(title: Provider.of<UserInfo>(context).phone??'', height: 40.0, style: TextStyles.getWhiteBoldText(30)),
                                 Expanded(child: Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
@@ -128,15 +165,16 @@ class _DriverRechargeState extends State<DriverRecharge> {
                                                         ),
                                                       ),
                                                     ),
-                                                    SizedBox(width: 50.0,child: AppText(text: '元',color: AppColors.mainColor,),)
+                                                    SizedBox(width: 30.0,child: AppText(text: '元',color: AppColors.mainColor,),)
                                                   ],
                                                 ),
                                               )
                                           ),
-                                          Expanded(
+                                          _list.isEmpty?SizedBox():Expanded(
                                               child:Padding(
-                                                padding: const EdgeInsets.only(left: 20,right: 20),
+                                                padding: const EdgeInsets.only(left: 20,right: 20,top: 10,bottom: 10),
                                                 child: GridView.builder(
+                                                    padding: EdgeInsets.all(0.0),
                                                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                                         crossAxisCount: 3,
                                                         crossAxisSpacing: 10.0,
@@ -148,7 +186,7 @@ class _DriverRechargeState extends State<DriverRecharge> {
                                                         onTap: (){
                                                           setState(() {
                                                             selectMoneyIndex = index;
-                                                            _editingController.text = money2[selectMoneyIndex];
+                                                            _editingController.text = _list[selectMoneyIndex].money;
                                                           });
                                                         },
                                                         child: Container(
@@ -158,10 +196,10 @@ class _DriverRechargeState extends State<DriverRecharge> {
                                                               borderRadius: BorderRadius.all(Radius.circular(8.0)),
                                                               border: Border.all(color: AppColors.mainColor,width: 1)
                                                           ),
-                                                          child: Text(money[index],style: TextStyle(fontSize: 15,color: selectMoneyIndex==index?AppColors.whiteColor:AppColors.mainColor),),
+                                                          child: Text('${_rechargeBean.list[index].money??''}元',style: TextStyle(fontSize: 15,color: selectMoneyIndex==index?AppColors.whiteColor:AppColors.mainColor),),
                                                         ),
                                                       );
-                                                    },itemCount: money.length,
+                                                    },itemCount: _rechargeBean?.list?.length,
                                                 ),
                                               )
                                           )
@@ -186,18 +224,18 @@ class _DriverRechargeState extends State<DriverRecharge> {
               ),
               SliverToBoxAdapter(
                 child: Container(
-                  height: 150.0,
+                  height: 120.0,
                   child: Row(
                     children: <Widget>[
                       createItem(0),
                       createItem(1),
-                      createItem(2),
+//                      createItem(2),
                     ],
                   ),
                 ),
               ),
               SliverToBoxAdapter(
-                child: SizedBox(height: 20,),
+                child: SizedBox(height: 30,),
               ),
               SliverToBoxAdapter(
                 child: Padding(
@@ -236,5 +274,24 @@ class _DriverRechargeState extends State<DriverRecharge> {
           ),
         )
     );
+  }
+
+  //生成充值订单
+  createRechargeOrder(){
+    if(_editingController.text.isEmpty){
+      Toast.show('充值金额不能为空');
+      return;
+    }
+    //1.支付宝 2.微信
+    var data = {
+      'money': _editingController.text,
+      'payment':selectIndex+1
+    };
+    DioUtils.instance.post(Api.orderCreateUrl,data: data,onSucceed: (response){
+
+    },onFailure: (code,msg){
+
+    });
+
   }
 }

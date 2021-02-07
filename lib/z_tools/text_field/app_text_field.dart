@@ -7,6 +7,7 @@ enum TexFieldMode{
   twoMode,//边框
   threeMode,//底边线
   fourMode,//底边线+左侧图标
+  none,
 }
 
 class AppTextField extends StatefulWidget {
@@ -116,6 +117,11 @@ class _AppTextFieldState extends State<AppTextField> {
           return createFourModel(isDark, themeData);
         }
         break;
+      case TexFieldMode.none:
+        {
+          return createNoneModel(isDark, themeData);
+        }
+        break;
       default:{}break;
     }
   }
@@ -194,8 +200,26 @@ class _AppTextFieldState extends State<AppTextField> {
       height: widget.height,
       padding: widget.edgeInsets??EdgeInsets.only(left: 16,right: 16),
       decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.lineColor,width: 1.0)),
+        border: Border(bottom: BorderSide(color: AppColors.lineColor,width: 1.0)),
       ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          leftImage(),
+          centerRadiusTextField(),
+          clearBtn(),
+          !widget.showPass ? Gaps.empty : Gaps.hGap15,
+          showEyes(),
+        ],
+      ),
+    );
+  }
+  ///模式5
+  createNoneModel(bool isDark, ThemeData themeData){
+    return Container(
+      height: widget.height,
+      padding: widget.edgeInsets??EdgeInsets.only(left: 16,right: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,

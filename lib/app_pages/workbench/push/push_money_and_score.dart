@@ -1,4 +1,5 @@
 
+import 'package:demo/app_pages/workbench/beans/HomePushScoreBean.dart';
 import 'package:demo/app_pages/workbench/push/create_order_scan.dart';
 import 'package:demo/app_pages/workbench/push/push_qr_code.dart';
 import 'package:demo/app_pages/workbench/push/push_tags.dart';
@@ -18,7 +19,43 @@ class PushMoneyAndScore extends StatefulWidget {
 
 class _PushMoneyAndScoreState extends State<PushMoneyAndScore> {
 
-  PageController _pageController = new PageController();
+
+  HomePushScoreBean scoreBean;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    readData();
+    getData();
+  }
+
+  //读取缓存
+  readData(){
+    AppClass.readData(Api.homeGetPushIntegralUrl).then((value){
+      if(value!=null){
+        setState(() {
+          scoreBean = HomePushScoreBean.fromJson(value);
+        });
+      }
+    });
+  }
+
+  //获取最新信息
+  getData(){
+    DioUtils.instance.post(Api.homeGetPushIntegralUrl,onSucceed: (response){
+      if(response is Map){
+        AppClass.saveData(response, Api.homeGetPushIntegralUrl);
+        if(mounted){
+          setState(() {
+            scoreBean = HomePushScoreBean.fromJson(response);
+          });
+        }
+      }
+    },onFailure: (code,msg){
+
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,14 +98,14 @@ class _PushMoneyAndScoreState extends State<PushMoneyAndScore> {
             child: ListView(
               children: <Widget>[
                 SizedBox(height: 10,child: const DecoratedBox(decoration: BoxDecoration(color: AppColors.bgColor)),),
-                createCell(0,'红白推广卡，最高优惠可达100元，先领券后下单',RichText(overflow: TextOverflow.ellipsis,text: TextSpan(
+                scoreBean?.push_user==0?SizedBox():createCell(0,'红包推广卡，最高优惠可达100元，先领券后下单',RichText(overflow: TextOverflow.ellipsis,text: TextSpan(
                   style: TextStyle(fontSize: 12,color: AppColors.black54Color),
                   children: [
                     TextSpan(
                       text: '奖'
                     ),
                     TextSpan(
-                        text: '10',
+                        text: scoreBean?.push_user.toString()=='null'?'':scoreBean?.push_user.toString(),
                       style: TextStyle(fontSize: 12,color: AppColors.orangeColor)
                     ),
                     TextSpan(
@@ -76,14 +113,14 @@ class _PushMoneyAndScoreState extends State<PushMoneyAndScore> {
                     )
                   ]
                 ))),
-                createCell(1,'分享到微信',RichText(overflow: TextOverflow.ellipsis,text: TextSpan(
+                scoreBean?.share_user==0?SizedBox():createCell(1,'分享到微信',RichText(overflow: TextOverflow.ellipsis,text: TextSpan(
                     style: TextStyle(fontSize: 12,color: AppColors.black54Color),
                     children: [
                       TextSpan(
                           text: '奖'
                       ),
                       TextSpan(
-                          text: '10',
+                          text: scoreBean?.share_user.toString()=='null'?'':scoreBean?.share_user.toString(),
                           style: TextStyle(fontSize: 12,color: AppColors.orangeColor)
                       ),
                       TextSpan(
@@ -91,14 +128,14 @@ class _PushMoneyAndScoreState extends State<PushMoneyAndScore> {
                       )
                     ]
                 ))),
-                createCell(2,'推荐客户扫码开单',RichText(overflow: TextOverflow.ellipsis,text: TextSpan(
+                scoreBean?.cre_order==0?SizedBox():createCell(2,'推荐客户扫码开单',RichText(overflow: TextOverflow.ellipsis,text: TextSpan(
                     style: TextStyle(fontSize: 12,color: AppColors.black54Color),
                     children: [
                       TextSpan(
                           text: '奖'
                       ),
                       TextSpan(
-                          text: '10',
+                          text: scoreBean?.cre_order.toString()=='null'?'':scoreBean?.cre_order.toString(),
                           style: TextStyle(fontSize: 12,color: AppColors.orangeColor)
                       ),
                       TextSpan(
@@ -106,14 +143,14 @@ class _PushMoneyAndScoreState extends State<PushMoneyAndScore> {
                       )
                     ]
                 ))),
-                createCell(3,'推荐司机入职标兵代驾',RichText(overflow: TextOverflow.ellipsis,text: TextSpan(
+                scoreBean?.push_dri==0?SizedBox():createCell(3,'推荐司机入职标兵代驾',RichText(overflow: TextOverflow.ellipsis,text: TextSpan(
                     style: TextStyle(fontSize: 12,color: AppColors.black54Color),
                     children: [
                       TextSpan(
                           text: '成功入职奖'
                       ),
                       TextSpan(
-                          text: '300',
+                          text: scoreBean?.push_dri.toString()??'',
                           style: TextStyle(fontSize: 12,color: AppColors.orangeColor)
                       ),
                       TextSpan(
@@ -171,7 +208,7 @@ class _PushMoneyAndScoreState extends State<PushMoneyAndScore> {
                     Expanded(
                       child: Container(
                         alignment: Alignment.centerLeft,
-                        child: Text('推荐客户扫码开单',style: TextStyles.blackAnd14,),
+                        child: Text(title,style: TextStyles.blackAnd14,),
                       ),
                     ),
                     Expanded(child: Container(

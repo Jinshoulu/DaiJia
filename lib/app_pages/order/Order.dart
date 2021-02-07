@@ -69,7 +69,7 @@ class _OrderState extends State<Order> {
                   ),
                   child: AppText(text: '已完成',color: isOne==1?AppColors.whiteColor:AppColors.mainColor,),
                 ),
-              )
+              ),
             ],
           ),
         ),

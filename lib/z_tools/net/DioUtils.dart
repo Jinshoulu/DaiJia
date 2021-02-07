@@ -75,7 +75,6 @@ class DioUtils {
         response = await dio.post(url, data: params, options: options);
       }
 
-      print('received login data = ${response.data}');
       if (context != null) {
         LoadingView.hide();
       }
@@ -89,11 +88,19 @@ class DioUtils {
         return;
       }
       var result = response?.data;
-      //您的账号已在其他设备上登录（返回登录界面）
+
+      ///判断是不是调取的上传高德地图的接口
+      if(result['code']==null){
+        if(result['errcode']==10000){
+          return onSucceed(result['data']);
+        }else{
+          return onFailure(result['errcode'],result['errmsg']);
+        }
+      }
+      ///正常接口
       if (result['code'] == 102) {
         DioUtils.instance.dio.lock();
         DioUtils.instance.dio.clear();
-        Toast.show("您的账号已在其他设备上登录（返回登录界面）");
         if (showError) {
           showToast(result['msg']);
         }
@@ -106,9 +113,8 @@ class DioUtils {
       if (result['code'] == 100) {
         DioUtils.instance.dio.lock();
         DioUtils.instance.dio.clear();
-        Toast.show('token为空，登录失效');
         if (showError) {
-          showToast("登录信息失效");
+          showToast("token为空，登录失效");
         }
         if (onFailure != null) {
           onFailure(result['code'], result['msg']);
@@ -138,7 +144,7 @@ class DioUtils {
       }
       print("请求结果异常：$url" + error.toString());
       if (showError) {
-//        showToast('网络开小差了');
+        showToast('网络开小差了');
       }
       if (onFailure != null) {
         onFailure(10001, error.toString());
@@ -152,8 +158,7 @@ class DioUtils {
     var data,
     BuildContext context,
     Options options,
-    bool showError: true,
-        bool needList: false,
+    bool showError: true, bool needList: false,
     Function onSucceed,
     Function onFailure,
   }) async {
@@ -167,8 +172,7 @@ class DioUtils {
     var data,
     BuildContext context,
     Options options,
-    bool showError: true,
-        bool needList: false,
+    bool showError: true, bool needList: false,
     Function onSucceed,
     Function onFailure,
   }) async {

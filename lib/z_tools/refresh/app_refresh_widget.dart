@@ -13,14 +13,16 @@ class AppRefreshWidget extends StatefulWidget {
   final String requestUrl;
   final IndexedWidgetBuilder itemBuilder;
   final StateType stateType;
+  final String saveValue;
 
   const AppRefreshWidget({
     Key key,
-    @required this.itemBuilder,
     @required this.requestData,
     @required this.requestUrl,
     @required this.requestBackData,
+    @required this.itemBuilder,
     this.stateType = StateType.empty,
+    this.saveValue,
   }) : super(key: key);
 
   @override
@@ -30,23 +32,39 @@ class AppRefreshWidget extends StatefulWidget {
 class _AppRefreshWidgetState extends State<AppRefreshWidget> {
 
   EasyRefreshController _controller;
-  List _list = ['','','','',];
+  List _list = [];
   /// 是否正在加载数据
-  bool _isLoading = false;
+  bool _isLoading = true;
   int _page = 1;
   int _maxPage = 1;
-  StateType _stateType = StateType.loading;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _controller = EasyRefreshController();
+    readSaveData();
     _onRefresh();
     eventBus.on<ReloadListPage>().listen((event) {
       _onRefresh();
     });
+  }
 
+  readSaveData(){
+    if(_page==1){
+      _list.clear();
+     if(widget.saveValue !=null){
+       AppClass.readData(widget.saveValue).then((value){
+         if(value!=null){
+           _list = value;
+           setState(() {
+             _isLoading = false;
+             widget.requestBackData(_list);
+           });
+         }
+       });
+     }
+    }
   }
 
   Future _onRefresh() async {
@@ -58,16 +76,15 @@ class _AppRefreshWidgetState extends State<AppRefreshWidget> {
     var data = widget.requestData;
     data['p'] = _page;
     data['pageNum'] = 10;
-    DioUtils.instance.post(widget.requestUrl, needList: true, data: data, onFailure: (code,msg){
+    DioUtils.instance.post(widget.requestUrl, data: data, onFailure: (code,msg){
       if(mounted){
         setState(() {
           _isLoading = false;
-          _stateType = widget.stateType;
           widget.requestBackData(_list);
         });
       }
     },onSucceed: (response){
-      List list = response['data'];
+      List list = response['list'];
       _maxPage = response['countPage'];
       showDataList(list);
     });
@@ -76,14 +93,14 @@ class _AppRefreshWidgetState extends State<AppRefreshWidget> {
   showDataList(List dataList) {
     if (_page == 1) {
       _list.clear();
+      if(widget.saveValue!=null){
+        AppClass.saveData(dataList,widget.saveValue);
+      }
     }
     _list.addAll(dataList);
     if(mounted){
       setState(() {
         _isLoading = false;
-        if (_list.length == 0) {
-          _stateType = widget.stateType;
-        }
         widget.requestBackData(_list);
       });
     }

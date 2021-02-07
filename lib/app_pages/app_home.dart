@@ -3,14 +3,20 @@ import 'package:audioplayers/audio_cache.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:demo/app_pages/be_user_common/AppLocal.dart';
+import 'package:demo/app_pages/be_user_common/AppPlayAudio.dart';
 import 'package:demo/app_pages/driver/Driver.dart';
 import 'package:demo/app_pages/mine/Mine.dart';
 import 'package:demo/app_pages/order/Order.dart';
 import 'package:demo/app_pages/workbench/workbench.dart';
 import 'package:demo/provider/app_status.dart';
+import 'package:demo/provider/user_info.dart';
 import 'package:demo/z_tools/add/double_tap_back_exit_app.dart';
 import 'package:demo/z_tools/app_bus_event.dart';
+import 'package:demo/z_tools/dialog/update_dialog.dart';
 import 'package:demo/z_tools/image/FrameAnimImage.dart';
+import 'package:demo/z_tools/save_data.dart';
+import 'package:dio/dio.dart';
+import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -24,7 +30,7 @@ class AppHome extends StatefulWidget {
 class _AppHomeState extends State<AppHome> {
 
   ///链接状态
-  bool isLinkInternet = false;
+  bool isLinkInternet = true;
   PageController _pageController = PageController();
   //默认选择下标
   int mSelected = 0;
@@ -36,6 +42,8 @@ class _AppHomeState extends State<AppHome> {
     super.initState();
     btnWidth = 120.0;
 
+    SpUtil.putBool(AppValue.login_state, true);
+
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       initLoad();
     });
@@ -43,19 +51,121 @@ class _AppHomeState extends State<AppHome> {
     eventBus.on().listen((event) {
       ///音频播放
       if(event is PlayerAudio){
-        playAudio(event.audioName);
+        //'audio/message.mp3'
+        AppPlayAudio.instance.play(event.audioName);
       }
+      if(event is ExitApp){
+        AppClass.exitApp(this.context);
+      }
+    });
+    if(SpUtil.getBool(SaveData.smartUpdate,defValue: true)){
+      UpdateApp.determineAppVersion(this.context, true);
+    }
+  }
+
+  ///
+  initLoad()async{
+    await Provider.of<AppStatus>(this.context,listen: false).init();
+    await Provider.of<UserInfo>(this.context,listen: false).getUserInfo();
+    await initConnectivity();
+    await  AppLocal.getLocation(this.context).then((value){
+      print(value);
+    });
+    startTime();
+  }
+
+  ///提交自己的位置
+  Timer _timer;
+  List dataList = [];
+  int count = 0;
+  int allCount = 0;
+  List uploadFailedAddress = [];
+  ///加载定时器
+  startTime(){
+    if(_timer==null){
+      _timer = Timer.periodic(Duration(seconds: 6), (time){
+        print('--------> $count');
+          AppLocal.reloadLocation(this.context).then((value){
+            var data = {
+              'location':'${SpUtil.getString(AppValue.user_local_long)},${SpUtil.getString(AppValue.user_local_late)}',
+              'locatetime':DateTime.now().millisecondsSinceEpoch
+            };
+            dataList.add(data);
+          });
+          count++;
+          if(count==10){
+            allCount = allCount+10;
+            print('--------> $allCount');
+            count=0;
+            subLocalData();
+            subCurrentAddressData();
+          }
+      });
+    }
+  }
+
+  ///提交代驾轨迹到高德服务器
+  subLocalData(){
+
+    if(dataList.length==0){
+      debugPrint('上传的轨迹是空的');
+      return;
+    }
+    var data = {
+      'points':json.encode(dataList),
+      'key':SpUtil.getString(AppValue.user_key),
+      'sid':SpUtil.getString(AppValue.user_sid),
+      'tid':SpUtil.getString(AppValue.user_tid),
+      'trid':SpUtil.getString(AppValue.user_trid)
+    };
+    DioUtils.instance.post(Api.uploadPointUrl,data: data,onSucceed: (response){
+      dataList.clear();
+    },onFailure: (code,msg){
+      dataList.clear();
+      AppClass.saveCurrentAddressData(data);
     });
   }
 
-  initLoad()async{
-    await Provider.of<AppStatus>(context,listen: false).init();
-    await initConnectivity();
-    await  AppLocal.getLocation().then((value){
-      print(value);
+  ///提交新位置到服务器
+  subCurrentAddressData(){
+
+    var data = {
+      'province_id':SpUtil.getString(AppValue.user_province_id),
+      'city_id':SpUtil.getString(AppValue.user_city_id),
+      'area_id':SpUtil.getString(AppValue.user_area_id),
+      'lon':SpUtil.getString(AppValue.user_local_long),
+      'lat':SpUtil.getString(AppValue.user_local_late),
+      'address':SpUtil.getString(AppValue.user_local_address)
+    };
+    DioUtils.instance.post(Api.uploadCurrentPointUrl,data: data,onSucceed: (response){
+
+    },onFailure: (code,msg){
+
     });
-    ///初始化音频
-    initAudioPlayer();
+  }
+  ///提交失败的位置信息
+  submitFailedAddress(){
+    if(!mounted){
+      return;
+    }
+    if(uploadFailedAddress.length==0){
+      return;
+    }else{
+      var data = uploadFailedAddress.first;
+      if(data['key']==null){
+        data['key'] = Provider.of<UserInfo>(this.context,listen: false).key;
+        data['sid'] = Provider.of<UserInfo>(this.context,listen: false).sid;
+        data['tid'] = Provider.of<UserInfo>(this.context,listen: false).tid;
+        data['trid'] = Provider.of<UserInfo>(this.context,listen: false).trid;
+      }
+      DioUtils.instance.post(Api.uploadPointUrl,data: data,onSucceed: (response){
+        uploadFailedAddress.removeAt(0);
+        submitFailedAddress();
+      },onFailure: (code,msg){
+        AppClass.saveCurrentAddressData(data);
+      });
+    };
+
   }
 
   ///添加网络监听
@@ -72,22 +182,18 @@ class _AppHomeState extends State<AppHome> {
         .listen((ConnectivityResult result) async {
       switch (result) {
         case ConnectivityResult.wifi:
-          print('当前使用的是wifi网络');
-          Provider.of<AppStatus>(this.context,listen: false).connect = true;
-          if (mounted) {
-            setState(() {
-              isLinkInternet = true;
-            });
-          }
-          break;
         case ConnectivityResult.mobile:
-          print('当前使用的是手机网络');
           Provider.of<AppStatus>(this.context,listen: false).connect = true;
           if (mounted) {
             setState(() {
               isLinkInternet = true;
             });
           }
+          AppClass.getUploadSaveAddress().then((value){
+            if(value.isNotEmpty||value.length!=0){
+              submitFailedAddress();
+            }
+          });
           break;
         case ConnectivityResult.none:
           print('当前无可用网络');
@@ -109,6 +215,14 @@ class _AppHomeState extends State<AppHome> {
           break;
       }
     });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _timer?.cancel();
+    _timer = null;
   }
 
   @override
@@ -226,111 +340,4 @@ class _AppHomeState extends State<AppHome> {
   }
 
 
-  // **************** 音频播放 *************
-  AudioPlayer _audioPlayer;
-  AudioCache _audioCache;
-  AudioPlayerState _AudioPlayerState = AudioPlayerState.STOPPED;
-  StreamSubscription _durationSubscription;
-  StreamSubscription _positionSubscription;
-  StreamSubscription _playerCompleteSubscription;
-  StreamSubscription _playerErrorSubscription;
-  StreamSubscription _playerStateSubscription;
-  StreamSubscription  mStreamSubscription;
-
-  initAudioPlayer(){
-
-    _audioPlayer = AudioPlayer(mode: PlayerMode.MEDIA_PLAYER);
-    if (Platform.isIOS) {
-      if (_audioCache.fixedPlayer != null) {
-        _audioCache.fixedPlayer.startHeadlessService();
-      }
-      _audioPlayer.startHeadlessService();
-    }
-    _audioCache = AudioCache(fixedPlayer: _audioPlayer);
-    _durationSubscription = _audioPlayer.onDurationChanged.listen((duration) {
-      // TODO implemented for iOS, waiting for android impl
-      if (Platform.isIOS) {
-        // (Optional) listen for notification updates in the background
-        _audioPlayer.startHeadlessService();
-      }
-    });
-
-    _positionSubscription =
-        _audioPlayer.onAudioPositionChanged.listen((p){
-          debugPrint('audioPlayer onAudioPositionChanged $p');
-        });
-
-    _playerCompleteSubscription =
-        _audioPlayer.onPlayerCompletion.listen((event) {
-          debugPrint('audioPlayer onPlayerCompletion ');
-          _audioPlayer.stop();
-          _AudioPlayerState = AudioPlayerState.STOPPED;
-        });
-
-    _playerErrorSubscription = _audioPlayer.onPlayerError.listen((msg) {
-      debugPrint('audioPlayer error : $msg');
-      _AudioPlayerState = AudioPlayerState.STOPPED;
-      _audioPlayer.stop();
-    });
-
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      debugPrint('audioPlayer onPlayerStateChanged $state');
-      _AudioPlayerState = state;
-    });
-    _audioPlayer.onNotificationPlayerStateChanged.listen((state) {
-      debugPrint('audioPlayer onNotificationPlayerStateChanged $state');
-    });
-
-    _audioPlayer.play('assets/audio/message.mp3');
-  }
-
-  ///销毁播放器
-  disAudioPlayer()async {
-    _durationSubscription?.cancel();
-    _positionSubscription?.cancel();
-    _playerCompleteSubscription?.cancel();
-    _playerErrorSubscription?.cancel();
-    _playerStateSubscription?.cancel();
-    await _audioPlayer.release();
-    debugPrint('收到关闭语音的消息了3');
-    _audioPlayer.dispose();
-  }
-
-  ///使用播放器播放
-  playAudio(String url) async {
-
-    if(_AudioPlayerState==AudioPlayerState.PLAYING){
-      debugPrint('有音频正在播放');
-      return;
-    }
-    if (url == null || url.isEmpty) {
-      return;
-    }
-    debugPrint("音频路径：${url + "-------------------"} \n 保存的路径 = $url");
-
-    if(url.contains('http')){
-      await _audioPlayer.setUrl(url);
-    }else{
-      await _audioPlayer.setUrl(url);
-    }
-//    int result = await _audioPlayer.earpieceOrSpeakersToggle();
-//    debugPrint("当前模式后： $result");
-//
-//    _audioPlayer.setPlaybackRate(playbackRate: 1.0);
-
-  }
-
-  ///播放器暂停
-  Future<int> audioPause() async {
-    final result = await _audioPlayer.pause();
-    if (result == 1) {}
-    return result;
-  }
-
-  ///设置外音
-  setPlayState() async {
-    //  "status5": "2",//使用听筒播放语音：1开启2关闭，默认为2
-    int result = await _audioPlayer.earpieceOrSpeakersToggle();
-    debugPrint("当前模式后： $result");
-  }
 }

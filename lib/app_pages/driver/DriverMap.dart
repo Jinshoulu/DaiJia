@@ -12,11 +12,11 @@ class DriverMap extends StatefulWidget {
   _DriverMapState createState() => _DriverMapState();
 }
 
-class _DriverMapState extends State<DriverMap> with SingleTickerProviderStateMixin, _AnimationMapMixin{
+class _DriverMapState extends State<DriverMap> with SingleTickerProviderStateMixin, _AnimationMapMixin, AutomaticKeepAliveClientMixin{
 
-//  @override
-//  // TODO: implement wantKeepAlive
-//  bool get wantKeepAlive => true;
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 
   //  定位的key
   GlobalKey anchorKey = GlobalKey();
@@ -55,9 +55,7 @@ class _DriverMapState extends State<DriverMap> with SingleTickerProviderStateMix
   
   @override
   Widget build(BuildContext context) {
-
-//    super.build(context);
-
+    super.build(context);
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[

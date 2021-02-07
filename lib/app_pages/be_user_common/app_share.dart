@@ -10,40 +10,29 @@ class AppShare {
 
   getData(String type, data, BuildContext context){
     print('分享类型 = = $data');
+    if(data==null){
+      return;
+    }
     var requestData = data;
     switch(type){
       case 'QQ':{
         requestData['mode'] = 'friend ';
       }break;
       case 'friend':{
-        requestData['mode'] = 'link ';
+        wxShareWeb(data, WeChatScene.SESSION);
       }break;
       case 'session':{
-        requestData['mode'] = 'link ';
+        wxShareWeb(data, WeChatScene.TIMELINE);
       }break;
       case 'msg':{
-        requestData['mode'] = 'link ';
+        Toast.show('已复制到剪贴板');
+        Clipboard.setData(ClipboardData(text: AppClass.data(data, 'jump_url')));
       }break;
       default:{
         requestData['mode'] = 'link';
       }break;
     }
-    DioUtils.instance.post(Api.registerUrl ,data: requestData, onFailure: (code,msg){},onSucceed: (response){
-      Navigator.pop(context);
-      var shareData = response;
-      switch(type){
-        case 'sesion':{
-          wxMiniProgram(shareData);
-        }break;
-        case 'friend':{
-          wxShareWeb(shareData, WeChatScene.TIMELINE);
-        }break;
-        default:{
-          Toast.show('已复制到粘贴板');
-          Clipboard.setData(ClipboardData(text: shareData['url']??''));
-        }break;
-      }
-    });
+
   }
 
   //分享网址到微信

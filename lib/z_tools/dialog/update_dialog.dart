@@ -7,58 +7,67 @@ import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../public_header.dart';
+import 'operate_dialog.dart';
 
 
 class UpdateApp{
   
-  static determineAppVersion (BuildContext context)async{
+  static determineAppVersion (BuildContext context,bool mandatory)async{
 
     //获取当前版本
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String localVersion = packageInfo.version.replaceAll(".", "");
     print('current version = ------> $localVersion');
     DioUtils.instance.post(Api.getVersionInfoUrl, onFailure: (code, msg) {}, onSucceed: (result) {
-      UpdateBean updateInfo = UpdateBean.fromJson(result['data']);
+      UpdateBean updateInfo = UpdateBean.fromJson(result);
       int l = int.parse(localVersion);
       int s = int.parse(updateInfo.version_no.replaceAll(".", ""));
       debugPrint("当前版本：" + l.toString());
       debugPrint("服务器版本：" + s.toString());
       if(l<s){
-        //强更新
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext bc) {
-            return new UpdateDialog(
-              title: "检测到新版本,正在更新中 ···",
-              version: updateInfo?.version_no,
-              url: updateInfo?.android_files,
-            );
-          },
-        );
-//        showDialog(context: context, builder: (BuildContext bc){
-//          return new OperateDialog(
-//            title: '版本更新',
-//            sureText: '马上更新',
-//            cancelText: '取消更新',
-//            content: "${updateInfo.upgrade_notes}",
-//            surePress: (String content){
-//              Navigator.pop(context);
-//              showDialog(
-//                context: context,
-//                barrierDismissible: false,
-//                builder: (BuildContext bc) {
-//                  return new UpdateDialog(
-//                    title: "更新中 ···",
-//                    version: updateInfo?.version_no,
-//                    url: updateInfo?.android_files,
-//                  );
-////                  return new SizedBox();
-//                },
-//              );
-//            },
-//          );
-//        });
+        if(mandatory){
+          //强更新
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext bc) {
+              return new UpdateDialog(
+                title: "检测到新版本,正在更新中 ···",
+                version: updateInfo?.version_no,
+                url: updateInfo?.android_file,
+              );
+            },
+          );
+        }else{
+       showDialog(context: context, builder: (BuildContext bc){
+          return new OperateDialog(
+            title: '版本更新',
+            sureText: '马上更新',
+            cancelText: '取消更新',
+            content: "${updateInfo.up_notes}",
+            surePress: (String content){
+              Navigator.pop(context);
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext bc) {
+                  return new UpdateDialog(
+                    title: "更新中 ···",
+                    version: updateInfo?.version_no,
+                    url: updateInfo?.android_file,
+                  );
+                },
+              );
+            },
+          );
+        });
+        }
+      }else{
+        if(!mandatory){
+          AppShowBottomDialog.showNormalDialog(context, '', '确定', '检测更新', '当前版本为最新版本', (){
+
+          });
+        }
       }
     });
     
@@ -68,21 +77,15 @@ class UpdateApp{
 
 class UpdateBean {
     String android_file;
-    String android_files;
-    String ios_url;
-    String upgrade_notes;
-    String version_ios;
+    String up_notes;
     String version_no;
 
-    UpdateBean({this.android_file, this.android_files, this.ios_url, this.upgrade_notes, this.version_ios, this.version_no});
+    UpdateBean({this.android_file, this.up_notes, this.version_no});
 
     factory UpdateBean.fromJson(Map<String, dynamic> json) {
         return UpdateBean(
             android_file: json['android_file'], 
-            android_files: json['android_files'], 
-            ios_url: json['ios_url'], 
-            upgrade_notes: json['upgrade_notes'], 
-            version_ios: json['version_ios'], 
+            up_notes: json['up_notes'], 
             version_no: json['version_no'], 
         );
     }
@@ -90,14 +93,12 @@ class UpdateBean {
     Map<String, dynamic> toJson() {
         final Map<String, dynamic> data = new Map<String, dynamic>();
         data['android_file'] = this.android_file;
-        data['android_files'] = this.android_files;
-        data['ios_url'] = this.ios_url;
-        data['upgrade_notes'] = this.upgrade_notes;
-        data['version_ios'] = this.version_ios;
+        data['up_notes'] = this.up_notes;
         data['version_no'] = this.version_no;
         return data;
     }
 }
+
 /*
 showDialog(context: context, builder: (BuildContext bc) {
 return new AstgoWarmDialog();
@@ -184,8 +185,9 @@ class _UpdateDialogState extends State<UpdateDialog> {
   /// 安装
   Future<Null> _installApk(String filePath) async {
     Navigator.pop(context);
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
     try {
-      InstallPlugin.installApk(filePath, 'com.astgo.app.orders')
+      InstallPlugin.installApk(filePath, packageInfo?.packageName)
           .then((result) {
         debugPrint('install apk $result');
       }).catchError((error) {

@@ -1,8 +1,10 @@
 
+import 'package:demo/provider/user_info.dart';
 import 'package:demo/public_header.dart';
 import 'package:demo/z_tools/app_widget/text_container.dart';
 import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HomeAddress extends StatelessWidget {
   final Function pushMap;
@@ -38,9 +40,11 @@ class HomeAddress extends StatelessWidget {
                 pushMap();
               },
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  TextContainer(title: SpUtil.getString(AppValue.user_aoi_name)??'', height: 20, style: TextStyles.getBlackBoldText(15)),
-                  Container(alignment: Alignment.centerLeft,child: Text(SpUtil.getString(AppValue.user_local_address)??'',style: TextStyle(fontSize: 12,color: AppColors.black54Color),),)
+                  TextContainer(title: Provider.of<UserInfo>(context).user_aoi_name??'', height: 20, style: TextStyles.getBlackBoldText(15)),
+                  Container(alignment: Alignment.centerLeft,child: Text(Provider.of<UserInfo>(context).user_local_address??'',style: TextStyle(fontSize: 12,color: AppColors.black54Color),),)
                 ],
               ),
             )),

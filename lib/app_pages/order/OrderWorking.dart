@@ -1,13 +1,18 @@
 import 'package:amap_map_fluttify/amap_map_fluttify.dart';
+import 'package:demo/app_pages/driver/tools/MapClass.dart';
 import 'package:demo/app_pages/order/OrderConfirm.dart';
 import 'package:demo/app_pages/order/OrderDetail.dart';
+import 'package:demo/provider/user_info.dart';
 import 'package:demo/z_tools/app_widget/AppText.dart';
 import 'package:demo/z_tools/app_widget/app_cell.dart';
 import 'package:demo/z_tools/app_widget/app_size_box.dart';
 import 'package:demo/z_tools/app_widget/container_add_line_widget.dart';
 import 'package:demo/z_tools/image/app_image_and_label.dart';
+import 'package:demo/z_tools/image/image_header.dart';
+import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 
 import '../../public_header.dart';
 
@@ -16,7 +21,7 @@ class OrderWorking extends StatefulWidget {
   _OrderWorkingState createState() => _OrderWorkingState();
 }
 
-class _OrderWorkingState extends State<OrderWorking> {
+class _OrderWorkingState extends State<OrderWorking> with AutomaticKeepAliveClientMixin{
   ///进行中的订单的状态
   int orderStatus = 0;
   int millisecond = 0;
@@ -25,16 +30,32 @@ class _OrderWorkingState extends State<OrderWorking> {
   int min = 0;
   int second = 0;
   int milli = 0;
+  ///
+  List<LatLng> coorsList = [];
+  ///
+  AmapController _controller;
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    coorsList.add(LatLng(34.777489, 113.708997));
+    coorsList.add(LatLng(34.776489, 113.707997));
+    coorsList.add(LatLng(34.776389, 113.706997));
+    coorsList.add(LatLng(34.795489, 113.405997));
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       startTimer();
     });
+
   }
+
+
+
 
   @override
   void dispose() {
@@ -44,8 +65,10 @@ class _OrderWorkingState extends State<OrderWorking> {
     _timer = null;
   }
 
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Stack(
       children: <Widget>[
         Positioned(left: 0, top: 0, right: 0, child: showTopMapWidget()),
@@ -60,6 +83,51 @@ class _OrderWorkingState extends State<OrderWorking> {
             top: orderStatus == 2 ? 120.0 : 220.0,
             right: 0,
             child: showCenterWidget()),
+        Positioned(
+            left: 0,top: 0,right: 0,
+            child: Container(
+              height: 50.0,
+              child: Row(
+                children: <Widget>[
+                  SizedBox(
+                    width: 100.0,
+                    child: AppButton(title: '骑行', onPress: ()async{
+                      await _controller?.clear();
+                      ///获取骑行路线、距离和时长
+                      MapClass.getRoutePath(_controller, coorsList.first, coorsList.last,(value)async{
+                            await _controller?.addMarker(MarkerOption(
+                                coordinate: coorsList.first,
+                                visible: true,
+                                iconProvider:
+                                    AssetImage('assets/images/司机-忙碌.png'),
+                                title: '您的位置',
+                                snippet:
+                                    '距离约：${value['distance']}km\n骑行时间: ${value['time']}分')
+                            );
+                            await _controller?.addMarker(MarkerOption(
+                                coordinate: coorsList.last,
+                                visible: true,
+                                iconProvider:
+                                    AssetImage('assets/images/派单-位置.png'),
+                                title: '目的地',
+                                snippet: '距离约：${value['distance']}km\n骑行时间: ${value['time']}分')
+                            );
+                          });
+                    }),
+                  ),
+                  SizedBox(
+                    width: 100.0,
+                    child: AppButton(title: '驾车', onPress: (){
+                      ///获取驾车路线、距离和时长
+                      MapClass.getDriverPath(_controller, coorsList.first, coorsList.last,(value){
+                        print(value);
+                      });
+                    }),
+                  ),
+                ],
+              ),
+            )
+        )
       ],
     );
   }
@@ -67,20 +135,43 @@ class _OrderWorkingState extends State<OrderWorking> {
   showTopMapWidget() {
     return Container(
       height: orderStatus == 2 ? 150.0 : 250.0,
-      child: Stack(
-        children: <Widget>[
-          AmapView(
-            mapType: ThemeUtils.isDark(context) ? MapType.Night : null,
-            zoomLevel: 16,
-            zoomGesturesEnabled: false,
-            showZoomControl: false,
-            autoRelease: false,
-            onMapMoveEnd: (move) async {},
-            onMapCreated: (controller) async {},
-          ),
-        ],
+      width: double.infinity,
+      child: AmapView(
+        mapType: ThemeUtils.isDark(context) ? MapType.Night : null,
+        zoomLevel: 16,
+        zoomGesturesEnabled: true,
+        showZoomControl: false,
+        autoRelease: false,
+        onMapMoveEnd: (move) async {},
+        onMapCreated: (controller) async {
+          _controller = controller;
+          await _controller?.showMyLocation(MyLocationOption(
+            strokeColor: Colors.transparent,
+            fillColor: Colors.blue.withOpacity(0.2),
+            myLocationType: MyLocationType.Locate
+          ));
+          addMarkerOption(coorsList.first, coorsList.last);
+        },
       ),
     );
+  }
+
+  addMarkerOption(LatLng startPoint,LatLng endPoint)async{
+    await _controller?.addMarker(MarkerOption(
+      coordinate: startPoint,
+      visible: true,
+      iconProvider: AssetImage('assets/images/司机-忙碌.png'),
+      title: '您的位置',
+      snippet: '预估时间: '
+
+    ));
+    await _controller?.addMarker(MarkerOption(
+      coordinate: endPoint,
+      visible: true,
+      infoWindowEnabled: true,
+      iconProvider: AssetImage('assets/images/派单-位置.png'),
+      title: '目的地',
+    ));
   }
 
   showOrderInfoWidget() {

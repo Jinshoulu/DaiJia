@@ -2,8 +2,10 @@
 import 'package:demo/public_header.dart';
 import 'package:demo/z_tools/app_widget/AppText.dart';
 import 'package:demo/z_tools/app_widget/app_cell.dart';
+import 'package:demo/z_tools/app_widget/app_desc_widget.dart';
 import 'package:demo/z_tools/app_widget/app_size_box.dart';
 import 'package:demo/z_tools/app_widget/app_stack_widget.dart';
+import 'package:demo/z_tools/app_widget/text_container.dart';
 import 'package:demo/z_tools/image/AppSubmitImage.dart';
 import 'package:flutter/material.dart';
 
@@ -35,6 +37,9 @@ class _MineCompleteInfoState extends State<MineCompleteInfo> {
   ///上传工装半身照
   String photo = '';
   String submitPhoto = '';
+  ///审核状态
+  int applicationStatus = 1;
+
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +123,19 @@ class _MineCompleteInfoState extends State<MineCompleteInfo> {
                       Expanded(child: SizedBox()),
                     ],
                   ),
-                )
+                ),
+                applicationStatus==1?
+                    Container(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          AppCell(title: '审核状态', content: '正在审核',contentStyle: TextStyle(fontSize: 12,color: AppColors.red),),
+                          AppDescWidget(text: '这个就是审核的状态反馈')
+                        ],
+                      ),
+                    )
+                    :SizedBox(),
+                SizedBox(height: 60.0,)
               ],
             ),
           ),
@@ -263,7 +280,7 @@ class _MineCompleteInfoState extends State<MineCompleteInfo> {
       'fileurl7':submitDelegateThree,
       'fileurl8':submitPhoto
     };
-    DioUtils.instance.post(Api.completeInfoUrl,data:data,onFailure: (code,msg){
+    DioUtils.instance.post(Api.mineSubmitApplicationInfoUrl,data:data,onFailure: (code,msg){
 
     },onSucceed: (response){
       Toast.show('已提交');

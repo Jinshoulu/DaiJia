@@ -11,6 +11,30 @@ class CreateOrderScan extends StatefulWidget {
 }
 
 class _CreateOrderScanState extends State<CreateOrderScan> {
+
+  var data;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getData();
+  }
+
+  getData(){
+    DioUtils.instance.post(Api.homeAppletQRCodeUrl,onSucceed: (response){
+      if(response is Map){
+        if(mounted){
+          setState(() {
+            data = response;
+          });
+        }
+      }
+    },onFailure: (code,msg){
+
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -61,10 +85,10 @@ class _CreateOrderScanState extends State<CreateOrderScan> {
                               SizedBox(height: 30.0,),
                               Expanded(child: Container(
                                 padding: EdgeInsets.all(20.0),
-                                child: LoadAssetImage('defaultImage',radius: 0.0,),
+                                child: LoadImage(AppClass.data(data, 'code')),
                               )),
                               SizedBox(height: 20,),
-                              TextContainer(alignment: Alignment.center,title: '可使用微信,标兵代驾,代驾小程序', height: 30.0, style: TextStyles.blackAnd14),
+                              TextContainer(alignment: Alignment.center,title: '使用微信', height: 30.0, style: TextStyles.blackAnd14),
                               TextContainer(
                                   alignment: Alignment.center,
                                   title: '扫描上面的二维码',
@@ -80,7 +104,7 @@ class _CreateOrderScanState extends State<CreateOrderScan> {
                         alignment: Alignment.center,
                         height: 70.0,
                         child: Text(
-                          '每次打开生成新的二维码,每个二维码生成后\n有效时间为10分钟',
+                          '',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 14,

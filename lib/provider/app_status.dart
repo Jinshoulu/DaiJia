@@ -18,7 +18,7 @@ class AppStatus with ChangeNotifier{
   }
 
   init(){
-    this.connect = SpUtil.getBool(SaveData.connectStatus,defValue: false);
+    this.connect = SpUtil.getBool(SaveData.connectStatus,defValue: true);
     this.orderStatus = 0;
     this.address = SpUtil.getString(AppValue.user_local_address,defValue: '');
     this.lon = SpUtil.getString(AppValue.user_local_long,defValue: '');

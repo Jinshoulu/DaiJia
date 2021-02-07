@@ -1,4 +1,5 @@
 
+import 'package:demo/z_tools/image/AppSubmitImage.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -9,6 +10,7 @@ class AppAddImageWidget extends StatefulWidget {
 
   final Color bgColor;
   final String addBtnImage;
+  final List<ImageBean> showImages;
   final Function imageFiles;
   final int maxCount;
 
@@ -17,7 +19,7 @@ class AppAddImageWidget extends StatefulWidget {
     @required this.imageFiles,
     this.bgColor = AppColors.whiteColor,
     this.addBtnImage = '添加图片',
-    this.maxCount = 9,
+    this.maxCount = 9, this.showImages,
   }) : super(key: key);
 
   @override
@@ -26,7 +28,14 @@ class AppAddImageWidget extends StatefulWidget {
 
 class _AppAddImageWidgetState extends State<AppAddImageWidget> {
 
-  List images = new List();
+  List<ImageBean> images = new List();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    images = widget.showImages;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +44,7 @@ class _AppAddImageWidgetState extends State<AppAddImageWidget> {
       padding: EdgeInsets.only(left: 16,right: 16),
       child: GridView.builder(
           shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
           itemCount: (widget.maxCount==images.length?images.length:(images.length+1)),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             //横轴元素个数
@@ -59,12 +69,20 @@ class _AppAddImageWidgetState extends State<AppAddImageWidget> {
         onTap: ()async{
           Permission.photos.request().then((value)async{
             if(value.isGranted){
-              AppShowBottomDialog.showPhotoBottom(context, (String path){
-                debugPrint(path);
-                images.add(path);
+              AppSubmitImage.showDialog(this.context,(ImageBean bean){
+                String file1 = bean.data.fileurl;//全路径
+                String file2 = bean.data.fileurls;//版路径
+                debugPrint('all file = $file1, file = $file2');
+                images.add(bean);
                 widget.imageFiles(images);
                 setState(() {});
               });
+//              AppShowBottomDialog.showPhotoBottom(context, (String path){
+//                debugPrint(path);
+//                images.add(path);
+//                widget.imageFiles(images);
+//                setState(() {});
+//              });
             }else{
               Toast.show('检测到您拒绝访问相册权限,请到应用设置页面打开权限');
             }
@@ -82,7 +100,7 @@ class _AppAddImageWidgetState extends State<AppAddImageWidget> {
           children: <Widget>[
             Container(
                 padding: EdgeInsets.all(5),
-                child: LoadImage(images[index],fit: BoxFit.cover,)
+                child: LoadImage(images[index].data.fileurl,fit: BoxFit.cover,)
             ),
             Positioned(
                 child: InkWell(

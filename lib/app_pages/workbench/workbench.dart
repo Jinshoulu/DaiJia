@@ -1,9 +1,11 @@
 
-import 'package:demo/app_pages/be_user_common/AppPlayAudio.dart';
 import 'package:demo/app_pages/map/selectMap/AmapLocationAndSelectLocationPage.dart';
 import 'package:demo/app_pages/workbench/appointment/Appointment.dart';
+import 'package:demo/app_pages/workbench/beans/HomeInfoBean.dart';
 import 'package:demo/app_pages/workbench/driverCenter/DriverCenter.dart';
 import 'package:demo/app_pages/workbench/exchangeCenter/ExchangeCenter.dart';
+import 'package:demo/app_pages/workbench/single/BackMoneyNoticeList.dart';
+import 'package:demo/app_pages/workbench/single/OrderNoticeList.dart';
 import 'package:demo/app_pages/workbench/taskCenter/TaskCenter.dart';
 import 'package:demo/app_pages/workbench/tools/custom_slider.dart';
 import 'package:demo/app_pages/workbench/tools/home_address.dart';
@@ -14,12 +16,14 @@ import 'package:demo/app_pages/workbench/tools/top_card_detail.dart';
 import 'package:demo/app_pages/workbench/tools/top_center_menu.dart';
 import 'package:demo/app_pages/workbench/tools/top_header.dart';
 import 'package:demo/provider/app_status.dart';
+import 'package:demo/provider/user_info.dart';
 import 'package:demo/z_tools/app_bus_event.dart';
+import 'package:demo/z_tools/app_value.dart';
 import 'package:demo/z_tools/app_widget/app_clip_widget.dart';
 import 'package:demo/z_tools/app_widget/app_stack_widget.dart';
 import 'package:demo/z_tools/router/routers.dart';
+import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
 
 import '../../public_header.dart';
@@ -29,34 +33,84 @@ class Workbench extends StatefulWidget {
   _WorkbenchState createState() => _WorkbenchState();
 }
 
-class _WorkbenchState extends State<Workbench> {
+class _WorkbenchState extends State<Workbench> with AutomaticKeepAliveClientMixin{
 
 
-  ///数据列表
-  List dataList = [];
+  ///公告
+  List<Noticelist> dataList_adment = [];
+  List dataList_backNotice = [];
+  List dataList_orderNotice = [];
+  //首页类型 0.公司公告 1.返现提醒 2.订单提醒
+  int type = 0;
+
+  HomeInfoBean infoBean;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    readHomeData();
+    onRefreshData();
+  }
 
-    dataList.add('value');
-    dataList.add('value');
-    dataList.add('value');
-    dataList.add('value');
-    dataList.add('value');
+  ///读取保存的数据
+  readHomeData(){
+    AppClass.readData(Api.homeInfoUrl).then((value){
+      if(value!=null){
+        setState(() {
+          infoBean = HomeInfoBean.fromJson(value);
+          dataList_adment = infoBean.noticelist;
+        });
+      }
+    });
+//    AppClass.readData(Api.homeInfoUrl).then((value){
+//      if(value!=null){
+//        setState(() {
+//          dataList_backNotice = value;
+//        });
+//      }
+//    });
+    AppClass.readData(Api.mineOrderTipsUrl).then((value){
+      if(value!=null){
+        setState(() {
+          dataList_orderNotice = value;
+        });
+      }
+    });
+  }
 
+  //刷新
+  onRefreshData(){
+    getHomeData();
 
   }
 
-  onRefreshData(){
+  ///获取首页信息
+  getHomeData(){
+    DioUtils.instance.post(Api.homeInfoUrl,onSucceed: (response){
+      if(response is Map){
+        if(mounted){
+          AppClass.saveData(response, Api.homeInfoUrl);
+          infoBean = HomeInfoBean.fromJson(response);
+          setState(() {});
+        }
+      }
+    },onFailure: (code,msg){
 
+    });
 
   }
 
 
   @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+
+    super.build(context);
+
     return Scaffold(
       appBar: ShowEmptyBar(
         title: '标兵代驾',
@@ -65,13 +119,7 @@ class _WorkbenchState extends State<Workbench> {
           title: '派单返现',
           image: null,
           onPress: () {
-            AppShowBottomDialog.showSendOrder(context, '派单必看', '知道了', Container(
-              padding: EdgeInsets.only(left: 10,right: 10),
-              height: 250.0,
-              child: Html(data: '这是派单必看的内容'),
-            ), (){
-              AppPush.push(context, HomeRouter.sendSingle);
-            });
+            AppPush.push(context, HomeRouter.sendSingle);
           },
         ),
         rightWidget: AppButton(
@@ -88,11 +136,15 @@ class _WorkbenchState extends State<Workbench> {
             slivers: <Widget>[
               //登录状态
               SliverToBoxAdapter(
-                child: TopHeader(),
+                child: TopHeader(
+                  bean: infoBean,
+                ),
               ),
               //详情
               SliverToBoxAdapter(
-                child: TopCardDetail(),
+                child: TopCardDetail(
+                  bean: infoBean,
+                ),
               ),
               //菜单
               SliverToBoxAdapter(
@@ -122,38 +174,42 @@ class _WorkbenchState extends State<Workbench> {
                     pushYuyue: (){
                       AppPush.pushDefault(context, Appointment());
                     }
-                ),
+                )
               ),
               SliverToBoxAdapter(child: SizedBox(height: 10,),),
               SliverToBoxAdapter(
-                child: HomeHeader(),
-              ),
-              SliverList(delegate: SliverChildBuilderDelegate((BuildContext context, int index){
-                return InkWell(
-                  onTap: (){
-//                    showModalBottomSheet(
-//                        context: context,
-//                        /// 使用true则高度不受16分之9的最高限制
-//                        isScrollControlled: true,
-//                        builder: (BuildContext context) {
-//                          return DetermineWorkingStatus();
-//                        }
-//                    );
-                    AppShowBottomDialog.showReloadLocal(context, '金成时代广场');
-
+                child: HomeHeader(
+                  bean: infoBean,
+                  type: type,
+                  onPress: (value){
+                    switch(value){
+                      case '公司公告':{
+                        type = 0;
+                      }break;
+                      case '返现提醒':{
+                        type = 1;
+                      }break;
+                      case '订单提醒':{
+                        type = 2;
+                      }break;
+                      case '查看更多':{
+                        if(type==1){
+                          AppPush.pushDefaultResult(context, BackMoneyNoticeList(),(ret){
+                            getHomeData();
+                          });
+                        }else{
+                          AppPush.pushDefaultResult(context, OrderNoticeList(),(ret){
+                            getHomeData();
+                          });
+                        }
+                      }break;
+                      default:{}break;
+                    }
+                    setState(() {});
                   },
-                  child: Container(
-                    height: 50.0,
-                    alignment: Alignment.centerLeft,
-                    decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: AppColors.bgColor,width: 1))
-                    ),
-                    margin: EdgeInsets.only(left: 16,right: 16),
-                    child: Text('今日新郑积分今日新郑积分今日新郑积分今日新郑积分今日新郑积分今日新郑积分',style: TextStyles.blackAnd14,overflow: TextOverflow.ellipsis,),
-                  ),
-                );
-              },childCount: dataList.length))
-
+                ),
+              ),
+              createHomeListData()
             ],
           )),
           downWidget: Container(
@@ -194,6 +250,120 @@ class _WorkbenchState extends State<Workbench> {
           )
       ),
     );
+  }
+
+  createHomeListData(){
+    switch(type){
+      case 0:
+        {
+          //公司公告
+          return dataList_adment.length == 0
+              ? SliverToBoxAdapter(
+                  child: Container(
+                      height: MediaQuery.of(context).size.width,
+                      child: StateLayout(
+                          type:StateType.empty)),
+                )
+              : SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                      (BuildContext context, int index) {
+                        Noticelist noticelist = dataList_adment[index];
+                  return InkWell(
+                    onTap: () {
+                      AppShowBottomDialog.showReloadLocal(context, Provider.of<UserInfo>(context).user_aoi_name??'');
+                    },
+                    child: Container(
+                      height: 50.0,
+                      alignment: Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                          border: Border(
+                              bottom: BorderSide(
+                                  color: AppColors.bgColor, width: 1))),
+                      margin: EdgeInsets.only(left: 16, right: 16),
+                      child: Text(
+                        noticelist?.title??'',
+                        style: TextStyles.blackAnd14,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  );
+                }, childCount: dataList_adment.length));
+        }
+        break;
+      case 1:
+        {
+          //返现提醒
+          return dataList_backNotice.length == 0
+              ? SliverToBoxAdapter(
+                  child: Container(
+                      height: MediaQuery.of(context).size.width,
+                      child: StateLayout(type: StateType.empty)),
+                )
+              : SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                      (BuildContext context, int index) {
+                  return InkWell(
+                    onTap: () {
+                      AppShowBottomDialog.showReloadLocal(context,
+                          Provider.of<UserInfo>(context).user_aoi_name ?? '');
+                    },
+                    child: Container(
+                      height: 50.0,
+                      alignment: Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                          border: Border(
+                              bottom: BorderSide(
+                                  color: AppColors.bgColor, width: 1))),
+                      margin: EdgeInsets.only(left: 16, right: 16),
+                      child: Text(
+                        AppClass.data(dataList_backNotice[index], 'key'),
+                        style: TextStyles.blackAnd14,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  );
+                }, childCount: dataList_backNotice.length));
+        }
+        break;
+      case 2:
+        {
+          //订单提醒
+          return dataList_orderNotice.length == 0
+              ? SliverToBoxAdapter(
+                  child: Container(
+                      height: MediaQuery.of(context).size.width,
+                      child: StateLayout(type: StateType.empty)),
+                )
+              : SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                      (BuildContext context, int index) {
+                  return InkWell(
+                    onTap: () {
+                      AppShowBottomDialog.showReloadLocal(context,
+                          Provider.of<UserInfo>(context).user_aoi_name ?? '');
+                    },
+                    child: Container(
+                      height: 50.0,
+                      alignment: Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                          border: Border(
+                              bottom: BorderSide(
+                                  color: AppColors.bgColor, width: 1))),
+                      margin: EdgeInsets.only(left: 16, right: 16),
+                      child: Text(
+                        AppClass.data(dataList_orderNotice[index], 'key'),
+                        style: TextStyles.blackAnd14,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  );
+                }, childCount: dataList_orderNotice.length));
+        }
+        break;
+      default:
+        {}
+        break;
+    }
   }
 
   showSubmitOrder(){

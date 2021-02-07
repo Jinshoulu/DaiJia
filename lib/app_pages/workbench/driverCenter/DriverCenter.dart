@@ -19,26 +19,55 @@ class DriverCenter extends StatefulWidget {
 
 class _DriverCenterState extends State<DriverCenter> {
 
-  List dataList = [];
-
+  List<SliverModel> dataList = [];
+  //信息
+  var infoData;
+  
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    dataList.add(SliverModel('本月收入(元)', ''));
+    dataList.add(SliverModel('上月收入(元)', ''));
+    dataList.add(SliverModel('总收入(元)', ''));
+    dataList.add(SliverModel('本月订单(个)', ''));
+    dataList.add(SliverModel('上月订单(个)', ''));
+    dataList.add(SliverModel('总订单(个)', ''));
+    dataList.add(SliverModel('本月积分(分)', ''));
+    dataList.add(SliverModel('上月积分(分)', ''));
+    dataList.add(SliverModel('总积分(分)', ''));
+    dataList.add(SliverModel('本月在线', ''));
+    dataList.add(SliverModel('上月在线', ''));
+    dataList.add(SliverModel('消费率(%)', ''));
+    getData();
+  }
+  
+  getData(){
+    
+    DioUtils.instance.post(Api.centerIndexUrl,onSucceed: (response){
+      if(response is Map){
+        if(mounted){
+          setState(() {
+            infoData = response;
+            dataList.clear();
+            dataList.add(SliverModel('本月收入(元)', AppClass.data(infoData, 'month_money')));
+            dataList.add(SliverModel('上月收入(元)', AppClass.data(infoData, 'up_money')));
+            dataList.add(SliverModel('总收入(元)', AppClass.data(infoData, 'allmoney')));
+            dataList.add(SliverModel('本月订单(个)', AppClass.data(infoData, 'month_order')));
+            dataList.add(SliverModel('上月订单(个)', AppClass.data(infoData, 'up_order')));
+            dataList.add(SliverModel('总订单(个)', AppClass.data(infoData, 'allorder')));
+            dataList.add(SliverModel('本月积分(分)', AppClass.data(infoData, 'month_integral')));
+            dataList.add(SliverModel('上月积分(分)', AppClass.data(infoData, 'up_integral')));
+            dataList.add(SliverModel('总积分(分)', AppClass.data(infoData, 'allint')));
+            dataList.add(SliverModel('本月在线', '${AppClass.data(infoData, 'month_online')}'));
+            dataList.add(SliverModel('上月在线', '${AppClass.data(infoData, 'up_online')}'));
+            dataList.add(SliverModel('消费率(%)', AppClass.data(infoData, 'percent')));
+          });
+        }
+      }
+    },onFailure: (code,msg){
 
-    dataList.add(SliverModel('本月收入(元)', '0.00'));
-    dataList.add(SliverModel('上月收入(元)', '0.00'));
-    dataList.add(SliverModel('总收入(元)', '0.00'));
-    dataList.add(SliverModel('本月订单(个)', '0'));
-    dataList.add(SliverModel('上月订单(个)', '0'));
-    dataList.add(SliverModel('总订单(个', '0'));
-    dataList.add(SliverModel('本月积分(分)', '0'));
-    dataList.add(SliverModel('上月积分(分)', '0'));
-    dataList.add(SliverModel('总积分(分)', '0'));
-    dataList.add(SliverModel('本月在线', '0小时'));
-    dataList.add(SliverModel('上月在线', '0小时'));
-    dataList.add(SliverModel('消费率(%)', '0'));
-
+    });
   }
 
   @override
@@ -76,7 +105,7 @@ class _DriverCenterState extends State<DriverCenter> {
                           children: <Widget>[
                             SizedBox(width: 100,child: AppButton(title: '余额',textStyle: TextStyles.whiteAnd14, image: '司机中心-余额',imageSize: 15,buttonType: ButtonType.leftImage, onPress: (){})),
                             SizedBox(height: 2,),
-                            TextContainer(alignment: Alignment.center,title: '2501', height: 50, style: TextStyles.getWhiteBoldText(40)),
+                            TextContainer(alignment: Alignment.center,title: AppClass.data(infoData, 'money'), height: 50, style: TextStyles.getWhiteBoldText(40)),
                           ],
                         ),
                       )),
@@ -165,9 +194,10 @@ class _DriverCenterState extends State<DriverCenter> {
                             case 10:{//在线时长
                               AppPush.pushDefault(context, DriverOnlineTime(typeIndex: index-9,));
                             }break;
-                            default:{//消单率
+                            case 11:{//消单率
                               AppPush.pushDefault(context, DriverConsumptionRecord());
                             }break;
+                            default:{}break;
                           }
                         },
                         child: Container(
@@ -225,12 +255,12 @@ class _DriverCenterState extends State<DriverCenter> {
                                           child:LoadAssetImage('推广-驾驶',width: 18,fit: BoxFit.fitWidth,radius: 0.0,color: ColorsApp.whiteColor,),
                                         ),
                                         SizedBox(width: 5,),
-                                        Expanded(child: Text('代驾分 12分',style: TextStyle(fontSize: 14,color: AppColors.whiteColor),))
+                                        Expanded(child: Text('代驾分 ${AppClass.data(infoData, 'branch')}分',style: TextStyle(fontSize: 14,color: AppColors.whiteColor),))
                                       ],
                                     ),
                                   ),
                                   TextContainer(title: '本您度积分周期内扣完积分,系统将自动终止合作', height: 20, style: TextStyles.whiteAnd12),
-                                  TextContainer(title: '戒指当前已扣3分', height: 20, style: TextStyles.whiteAnd12),
+                                  TextContainer(title: '戒指当前已扣${AppClass.data(infoData, 'dec_branch')}分', height: 20, style: TextStyles.whiteAnd12),
                                 ],
                               )),
                               Container(

@@ -52,7 +52,7 @@ class Loading extends StatelessWidget {
               width: 60,
               alignment: Alignment.center,
               decoration: new BoxDecoration(
-                color: Colors.black38,
+                color: Colors.transparent,
                 borderRadius: BorderRadius.circular(3),
               ),
               child: new Column(

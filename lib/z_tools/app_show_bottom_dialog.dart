@@ -174,7 +174,7 @@ class AppShowBottomDialog {
   }
 
   ///字符串列表弹窗
-  static showBottomListSheet(BuildContext context, String title, List<String> list,Function onPress) {
+  static showBottomListSheet(BuildContext context, String title, List list,Function onPress) {
 
     showModalBottomSheet(
         context: context,

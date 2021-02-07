@@ -7,7 +7,7 @@ import '../../../public_header.dart';
 
 class MineService extends StatelessWidget {
 
-  List<String> images = ['账户充值','司机学堂','我的订单','电子工牌','抽检列表','收费标准','修改密码','公告列表','亲情号码','人工补单'];
+  List<String> images = ['账户充值','司机学堂','我的订单','电子工牌','抽检列表','收费标准','离线地图','修改密码','公告列表','亲情号码','人工补单'];
 
   final Function (String) onPress;
   MineService({Key key, this.onPress}) : super(key: key);

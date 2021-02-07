@@ -13,7 +13,7 @@ class AppText extends StatelessWidget {
     @required this.text,
     this.fonSize = 14,
     this.color = AppColors.blackColor,
-    this.alignment = Alignment.center
+    this.alignment = Alignment.center,
   }) : super(key: key);
 
   @override

@@ -7,18 +7,17 @@ import 'DioUtils.dart';
 class TokenInterceptor extends Interceptor {
   @override
   Future onRequest(RequestOptions options) async {
-    bool loginState =
-        SpUtil.getBool(AppValue.login_state, defValue: false); //是否登录
-    //String url = options.baseUrl + options.path;
-    if (loginState) {
+    bool loginState = SpUtil.getBool(AppValue.login_state, defValue: false); //是否登录
+    String url = options.baseUrl + options.path;
+    if (loginState||(url==Api.uploadSignImageUrl)) {
       DioUtils.instance.dio.lock();
       int loginExpiration = SpUtil.getInt(AppValue.token_expiration); //USER_TOKEN过期时间
       int currentTime = (DateTime.now().millisecondsSinceEpoch) ~/ 1000; //获取当前时间戳10位
 
-      print(loginExpiration);
-      print(currentTime);
+      print('过期时间 ----------> $loginExpiration');
+      print('当前时间 ----------> $currentTime');
       if (currentTime >= loginExpiration) {
-        print("开始刷新USER_TOKEN");
+
         try {
           BaseOptions _baseOptions = BaseOptions(
             contentType: Headers.formUrlEncodedContentType,
@@ -32,11 +31,9 @@ class TokenInterceptor extends Interceptor {
             },
           );
           Dio dio = new Dio(_baseOptions);
-          var data = {
-            "refer_token":
-                '${SpUtil.getString(AppValue.refresh_token)}'
-          };
+          var data = {"refertoken": '${SpUtil.getString(AppValue.refresh_token)}'};
           print("刷新的USER_TOKEN参数:" + data.toString());
+
           var response = await dio.post(Api.refreshTokenUrl, data: data);
           print("刷新USER_TOKEN结果：" + response.data.toString());
           var result = response.data;
@@ -53,7 +50,7 @@ class TokenInterceptor extends Interceptor {
             //  }
             //}
             SpUtil.putString(AppValue.token, result['data']['token']);
-            SpUtil.putString( AppValue.refresh_token, result['data']['refer_token']);
+            SpUtil.putString( AppValue.refresh_token, result['data']['refertoken']);
             SpUtil.putInt(  AppValue.token_expiration, result['data']['expiration']);
             print("刷新USER_TOKEN成功" + SpUtil.getString(AppValue.token));
             DioUtils.instance.dio.unlock();

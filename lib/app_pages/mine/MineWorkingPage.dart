@@ -1,9 +1,10 @@
 
+import 'package:demo/provider/user_info.dart';
 import 'package:demo/z_tools/app_widget/AppBoldText.dart';
 import 'package:demo/z_tools/app_widget/AppText.dart';
 import 'package:demo/z_tools/app_widget/my_separator.dart';
-import 'package:demo/z_tools/app_widget/text_container.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../public_header.dart';
 
@@ -13,6 +14,50 @@ class MineWorkingPage extends StatefulWidget {
 }
 
 class _MineWorkingPageState extends State<MineWorkingPage> {
+
+  /// 是否正在加载数据
+  bool _isLoading = true;
+  var codeData;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    readData();
+    getData();
+  }
+
+  //读取缓存
+  readData(){
+    AppClass.readData(Api.mineCodeCardUrl).then((value){
+      if(value!=null){
+        setState(() {
+          codeData = value;
+        });
+      }
+    });
+  }
+
+  //获取最新信息
+  getData(){
+    DioUtils.instance.post(Api.mineCodeCardUrl, onFailure: (code,msg){
+      reloadState();
+    },onSucceed: (response){
+      if(response is Map){
+        AppClass.saveData(response, Api.mineCodeCardUrl);
+        codeData = response;
+        reloadState();
+      }else{
+        reloadState();
+      }
+    });
+  }
+  reloadState(){
+    if(mounted){
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,7 +94,7 @@ class _MineWorkingPageState extends State<MineWorkingPage> {
                       ),
                       Container(
                         height: 150.0,
-                        child: LoadImage('',radius: 0.0,fit: BoxFit.fitHeight,),
+                        child: LoadImage(AppClass.data(codeData, 'codes'),radius: 0.0,fit: BoxFit.fitHeight,),
                       ),
                       SizedBox(height: 30.0,),
                       SizedBox(
@@ -66,7 +111,9 @@ class _MineWorkingPageState extends State<MineWorkingPage> {
                             SizedBox(width: MediaQuery.of(context).size.width/2.0-30.0-80.0,),
                             Container(
                               width: 80.0,
-                              child: LoadImage('',radius: 0.0,fit: BoxFit.fitHeight,),
+                              height: 80.0,
+                              alignment: Alignment.center,
+                              child: LoadImage(Provider.of<UserInfo>(context).headimage??'',radius: 0.0,),
                             ),
                             SizedBox(width: 10,),
                             Expanded(
@@ -76,15 +123,15 @@ class _MineWorkingPageState extends State<MineWorkingPage> {
                                 children: <Widget>[
                                   SizedBox(
                                     height: 30.0,
-                                    child: AppBoldText(text: '王师傅',alignment: Alignment.centerLeft,),
+                                    child: AppBoldText(text: Provider.of<UserInfo>(context).nickname??'',alignment: Alignment.centerLeft,),
                                   ),
                                   SizedBox(
                                     height: 20.0,
-                                    child: AppText(text: '工号: 5222256',alignment: Alignment.centerLeft,),
+                                    child: AppText(text: '工号: ${Provider.of<UserInfo>(context).code??''}',alignment: Alignment.centerLeft,),
                                   ),
                                   SizedBox(
                                     height: 20.0,
-                                    child: AppText(text: '驾龄: 5年',alignment: Alignment.centerLeft,),
+                                    child: AppText(text: '驾龄: ${Provider.of<UserInfo>(context).work_time??''}年',alignment: Alignment.centerLeft,),
                                   ),
                                 ],
                               ),

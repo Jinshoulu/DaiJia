@@ -8,6 +8,10 @@ import 'package:flutter/material.dart';
 
 class AppPlayAudio {
 
+  static final AppPlayAudio instance = AppPlayAudio.init();
+
+  factory AppPlayAudio() => instance;
+
 
   AudioPlayer _audioPlayer;
   AudioCache _audioCache;
@@ -20,7 +24,7 @@ class AppPlayAudio {
   StreamSubscription  mStreamSubscription;
   String currentPlayerAudioUrl = '';
 
-  init(){
+  AppPlayAudio.init(){
     print('222 00000000 333');
     if(_audioPlayer==null){
       print('1313213232132131');
@@ -31,6 +35,7 @@ class AppPlayAudio {
         }
         _audioPlayer.startHeadlessService();
       }
+      _audioCache = AudioCache(fixedPlayer: _audioPlayer);
       _durationSubscription = _audioPlayer.onDurationChanged.listen((duration) {
         // TODO implemented for iOS, waiting for android impl
         if (Platform.isIOS) {
@@ -92,11 +97,13 @@ class AppPlayAudio {
     }
     debugPrint("音频路径：${url + "-------------------"} \n 保存的路径 = $url");
 
-    if(url.contains('http')){
-      _audioPlayer.play(url);
-    }else{
-      _audioPlayer.play(url);
-    }
+    _audioCache.play(url);
+
+//    if(url.contains('http')){
+//      _audioPlayer.play(url);
+//    }else{
+//      _audioPlayer.play(url);
+//    }
     _audioPlayer.setPlaybackRate(playbackRate: 1.0);
 
   }
