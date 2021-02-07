@@ -33,12 +33,19 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.astgo.app.daijia"
+        applicationId "com.wotuo.driver"
         minSdkVersion 20
         targetSdkVersion 28
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
+        manifestPlaceholders = [
+                AMAP_KEY: "f2ecc8b1819a64cdb3910a21b694a854", /// 高德地图key
+                JPUSH_PKGNAME : applicationId,
+                JPUSH_APPKEY : "0391296c67f5adcba7f57ebe", // NOTE: JPush 上注册的包名对应的 Appkey.
+                JPUSH_CHANNEL : "developer-default", //暂时填写默认值即可.
+                TENCENT_APP_ID: "101934822",
+        ]
     }
     //打包
     signingConfigs {
@@ -52,16 +59,31 @@ android {
 
     }
     buildTypes {
-        debug {
-            signingConfig signingConfigs.release
-        }
-        profile {
-            signingConfig signingConfigs.release
-        }
         release {
+            ndk {
+                abiFilters 'armeabi-v7a'
+            }
+            minifyEnabled false   // 是否启用压缩
+            shrinkResources false    // 是否打包(无用)的资源 和 flutter build apk --no-shrink一样
+            zipAlignEnabled false   // 是否采用压缩对齐方式（暂时不懂）
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
+        }
+        debug {
+            signingConfig signingConfigs.release //debug
         }
     }
+//    buildTypes {
+//        debug {
+//            signingConfig signingConfigs.release
+//        }
+//        profile {
+//            signingConfig signingConfigs.release
+//        }
+//        release {
+//            signingConfig signingConfigs.release
+//        }
+//    }
 //    buildTypes {
 //        release {
 //            // TODO: Add your own signing config for the release build.
